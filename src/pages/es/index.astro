@@ -1,0 +1,78 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Hero from "../../components/Hero.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import Footer from "../../components/Footer.astro";
+import { getProfile, getPublishedProjects } from "../../services/api";
+import { t } from "../../utils/i18n";
+
+const profile = await getProfile();
+const projects = await getPublishedProjects();
+
+const translatedProfile = profile
+    ? {
+          ...profile,
+          bio: t(profile.bio, "es"),
+          resume_url: t(profile.resume_url, "es"),
+      }
+    : null;
+
+const translatedProjects = projects?.map((project) => ({
+    ...project,
+    title: t(project.title, "es"),
+    summary: t(project.summary, "es"),
+    problem: t(project.problem, "es"),
+    architecture: t(project.architecture, "es"),
+    outcome: t(project.outcome, "es"),
+}));
+
+const uiDictionary = {
+    projects: "Ver proyectos",
+    github: "Ver GitHub",
+    resume: "Descargar CV",
+    problem: "Problema",
+    architecture: "Arquitectura",
+    outcome: "Resultado",
+    privateRepo: "Privado",
+};
+---
+
+<Layout title="Inicio Portafolio" lang="es">
+    <div
+        class="min-h-screen flex flex-col bg-white dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-200 dark:selection:bg-blue-900"
+    >
+        <Header lang="es" />
+        <main class="grow flex flex-col font-sans">
+            {
+                translatedProfile && (
+                    <Hero
+                        bio={translatedProfile.bio}
+                        resumeUrl={translatedProfile.resume_url || "#"}
+                        githubUrl={translatedProfile.github_url || "#"}
+                        t={uiDictionary}
+                    />
+                )
+            }
+
+            <section
+                id="proyectos"
+                class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12"
+            >
+                <h2
+                    class="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white"
+                >
+                    Proyectos
+                </h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {
+                        translatedProjects?.map((project) => (
+                            <ProjectCard project={project} t={uiDictionary} />
+                        ))
+                    }
+                </div>
+            </section>
+        </main>
+        <Footer />
+    </div>
+</Layout>

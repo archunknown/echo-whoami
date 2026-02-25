@@ -1,17 +1,78 @@
 ---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Hero from "../components/Hero.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import Footer from "../components/Footer.astro";
+import { getProfile, getPublishedProjects } from "../services/api";
+import { t } from "../utils/i18n";
 
+const profile = await getProfile();
+const projects = await getPublishedProjects();
+
+const translatedProfile = profile
+	? {
+			...profile,
+			bio: t(profile.bio, "en"),
+			resume_url: t(profile.resume_url, "en"),
+	  }
+	: null;
+
+const translatedProjects = projects?.map((project) => ({
+	...project,
+	title: t(project.title, "en"),
+	summary: t(project.summary, "en"),
+	problem: t(project.problem, "en"),
+	architecture: t(project.architecture, "en"),
+	outcome: t(project.outcome, "en"),
+}));
+
+const uiDictionary = {
+	projects: "View Projects",
+	github: "View GitHub",
+	resume: "Download CV",
+	problem: "Problem",
+	architecture: "Architecture",
+	outcome: "Outcome",
+	privateRepo: "Private",
+};
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Home Portfolio" lang="en">
+	<div
+		class="min-h-screen flex flex-col bg-white dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-200 dark:selection:bg-blue-900"
+	>
+		<Header lang="en" />
+		<main class="grow flex flex-col font-sans">
+			{
+				translatedProfile && (
+					<Hero
+						bio={translatedProfile.bio}
+						resumeUrl={translatedProfile.resume_url || "#"}
+						githubUrl={translatedProfile.github_url || "#"}
+						t={uiDictionary}
+					/>
+				)
+			}
+
+			<section
+				id="proyectos"
+				class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12"
+			>
+				<h2
+					class="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white"
+				>
+					Projects
+				</h2>
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+					{
+						translatedProjects?.map((project) => (
+							<ProjectCard project={project} t={uiDictionary} />
+						))
+					}
+				</div>
+			</section>
+		</main>
+		<Footer />
+	</div>
+</Layout>

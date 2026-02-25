@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AdminApp from "../components/admin/AdminApp";
+---
+
+<Layout title="Admin Portal" lang="es">
+    <div
+        class="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-200 dark:selection:bg-blue-900"
+    >
+        <main class="container mx-auto px-4 py-8">
+            <AdminApp client:only="react" />
+        </main>
+    </div>
+</Layout>
