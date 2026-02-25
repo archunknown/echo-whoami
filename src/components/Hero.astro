@@ -1,0 +1,50 @@
+---
+interface Dictionary {
+    projects: string;
+    github: string;
+    resume: string;
+}
+
+interface Props {
+    bio: string;
+    resumeUrl: string;
+    githubUrl: string;
+    t: Dictionary;
+}
+
+const { bio, resumeUrl, githubUrl, t } = Astro.props;
+---
+
+<section
+    class="max-w-5xl mx-auto px-4 py-24 md:py-32 w-full flex flex-col items-start gap-10"
+>
+    <h1
+        class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-gray-900 dark:text-white leading-[1.1]"
+    >
+        {bio}
+    </h1>
+    <div class="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
+        <a
+            href="#proyectos"
+            class="inline-flex justify-center items-center px-8 py-4 border border-transparent text-lg font-bold rounded-lg text-white bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm w-full sm:w-auto"
+        >
+            {t.projects}
+        </a>
+        <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex justify-center items-center px-8 py-4 border border-gray-300 dark:border-gray-700 text-lg font-bold rounded-lg text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm w-full sm:w-auto"
+        >
+            {t.github}
+        </a>
+        <a
+            href={resumeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex justify-center items-center px-8 py-4 border border-gray-300 dark:border-gray-700 text-lg font-bold rounded-lg text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm w-full sm:w-auto"
+        >
+            {t.resume}
+        </a>
+    </div>
+</section>

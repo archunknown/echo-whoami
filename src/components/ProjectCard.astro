@@ -1,0 +1,158 @@
+---
+interface Props {
+    project: any;
+    t: {
+        problem: string;
+        architecture: string;
+        outcome: string;
+        privateRepo: string;
+        [key: string]: string;
+    };
+}
+
+const { project, t } = Astro.props;
+---
+
+<article
+    class="flex flex-col border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-white dark:bg-[#0a0a0a] shadow-sm hover:shadow-lg transition-shadow duration-300 group"
+>
+    {
+        project.cover_image_url && (
+            <div class="aspect-[16/9] w-full overflow-hidden border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+                <img
+                    src={project.cover_image_url}
+                    alt={project.title}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                />
+            </div>
+        )
+    }
+    <div class="p-8 flex flex-col gap-6 flex-grow">
+        <div>
+            <h3
+                class="text-2xl font-bold text-gray-900 dark:text-white leading-tight mb-4"
+            >
+                {project.title}
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                {
+                    project.project_technologies?.map((pt: any) => (
+                        <span class="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded">
+                            {pt.technologies?.name}
+                        </span>
+                    ))
+                }
+            </div>
+        </div>
+
+        <p class="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+            {project.summary}
+        </p>
+
+        <div class="grid grid-cols-1 gap-6">
+            {
+                project.problem && (
+                    <section>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                            {t.problem}
+                        </h4>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                            {project.problem}
+                        </p>
+                    </section>
+                )
+            }
+
+            {
+                project.architecture && (
+                    <section>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                            {t.architecture}
+                        </h4>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                            {project.architecture}
+                        </p>
+                    </section>
+                )
+            }
+
+            {
+                project.outcome && (
+                    <section>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                            {t.outcome}
+                        </h4>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                            {project.outcome}
+                        </p>
+                    </section>
+                )
+            }
+        </div>
+
+        {
+            project.metrics &&
+                typeof project.metrics === "object" &&
+                Object.keys(project.metrics).length > 0 && (
+                    <div class="mt-4 grid grid-cols-2 lg:grid-cols-3 gap-6 border-t border-gray-100 dark:border-gray-800 py-6">
+                        {Object.entries(project.metrics).map(([key, value]) => (
+                            <div class="flex flex-col gap-1">
+                                <span class="text-2xl font-black text-gray-900 dark:text-white">
+                                    {String(value)}
+                                </span>
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-500 uppercase tracking-widest">
+                                    {key.replace(/_/g, " ")}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )
+        }
+
+        <div
+            class="mt-auto pt-6 flex flex-wrap gap-6 items-center border-t border-gray-100 dark:border-gray-800"
+        >
+            {
+                project.is_private === false ? (
+                    <>
+                        {project.demo_url && (
+                            <a
+                                href={project.demo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-sm font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-wide"
+                            >
+                                Demo
+                            </a>
+                        )}
+                        {project.prod_url && (
+                            <a
+                                href={project.prod_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-sm font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-wide"
+                            >
+                                Prod
+                            </a>
+                        )}
+                        {project.repo_url && (
+                            <a
+                                href={project.repo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-sm font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-wide"
+                            >
+                                Repo
+                            </a>
+                        )}
+                    </>
+                ) : (
+                    <span class="text-xs font-bold uppercase tracking-widest border border-gray-200 dark:border-gray-800 px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 rounded text-gray-500 dark:text-gray-500">
+                        {t.privateRepo || "Private"}
+                    </span>
+                )
+            }
+        </div>
+    </div>
+</article>

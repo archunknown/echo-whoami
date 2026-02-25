@@ -1,0 +1,46 @@
+---
+import type { SupportedLanguage } from "../utils/i18n";
+
+interface Props {
+    lang: SupportedLanguage;
+}
+
+const { lang } = Astro.props;
+---
+
+<header
+    class="w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]"
+>
+    <div class="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
+        <div
+            class="text-2xl font-black tracking-tighter text-gray-900 dark:text-white"
+        >
+            echo-whoami
+        </div>
+        <nav
+            class="flex gap-4 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 rounded-full px-5 py-2"
+        >
+            <a
+                href="/"
+                class={`text-sm font-bold tracking-wide transition-colors ${
+                    lang === "en"
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+            >
+                EN
+            </a>
+            <span class="text-gray-300 dark:text-gray-700">/</span>
+            <a
+                href="/es"
+                class={`text-sm font-bold tracking-wide transition-colors ${
+                    lang === "es"
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+            >
+                ES
+            </a>
+        </nav>
+    </div>
+</header>
