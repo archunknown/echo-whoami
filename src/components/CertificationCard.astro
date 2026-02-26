@@ -1,0 +1,51 @@
+---
+interface Props {
+    certification: any;
+    t: {
+        viewCredential?: string;
+        [key: string]: string | undefined;
+    };
+}
+
+const { certification, t } = Astro.props;
+---
+
+<article
+    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow"
+>
+    <div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+            {certification.title}
+        </h3>
+        <div
+            class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm font-medium text-gray-600 dark:text-gray-400"
+        >
+            <span>{certification.issuer}</span>
+            {
+                certification.issue_date && (
+                    <>
+                        <span class="hidden sm:inline">&bull;</span>
+                        <span>
+                            {new Date(
+                                certification.issue_date
+                            ).toLocaleDateString()}
+                        </span>
+                    </>
+                )
+            }
+        </div>
+    </div>
+
+    {
+        certification.credential_url && (
+            <a
+                href={certification.credential_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex justify-center items-center px-4 py-2 text-sm font-bold border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-200 bg-white dark:bg-[#0a0a0a] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors uppercase tracking-wider h-fit"
+            >
+                {t.viewCredential || "Credential"}
+            </a>
+        )
+    }
+</article>

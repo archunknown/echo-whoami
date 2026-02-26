@@ -39,21 +39,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      certifications: {
+        Row: {
+          created_at: string
+          credential_url: string | null
+          id: string
+          is_published: boolean | null
+          issue_date: string
+          issuer: string
+          order_index: number | null
+          title: Json
+        }
+        Insert: {
+          created_at?: string
+          credential_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          issue_date: string
+          issuer: string
+          order_index?: number | null
+          title: Json
+        }
+        Update: {
+          created_at?: string
+          credential_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          issue_date?: string
+          issuer?: string
+          order_index?: number | null
+          title?: Json
+        }
+        Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profile: {
         Row: {
+          architecture_image_url: string | null
+          architecture_text: Json | null
           bio: Json | null
+          data_analytics_image_url: string | null
+          data_analytics_text: Json | null
           github_url: string | null
           id: string
           resume_url: Json | null
         }
         Insert: {
+          architecture_image_url?: string | null
+          architecture_text?: Json | null
           bio?: Json | null
+          data_analytics_image_url?: string | null
+          data_analytics_text?: Json | null
           github_url?: string | null
           id?: string
           resume_url?: Json | null
         }
         Update: {
+          architecture_image_url?: string | null
+          architecture_text?: Json | null
           bio?: Json | null
+          data_analytics_image_url?: string | null
+          data_analytics_text?: Json | null
           github_url?: string | null
           id?: string
           resume_url?: Json | null
