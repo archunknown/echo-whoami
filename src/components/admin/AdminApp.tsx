@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import Dashboard from './Dashboard';
+import ProjectManager from './ProjectManager';
+import CertificationManager from './CertificationManager';
+import TechnologyManager from './TechnologyManager';
+import ContactManager from './ContactManager';
+
+type Tab = 'profile' | 'projects' | 'certifications' | 'stack' | 'messages';
 
 export default function AdminApp() {
     const [session, setSession] = useState<Session | null>(null);
@@ -9,6 +15,7 @@ export default function AdminApp() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<Tab>('profile');
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,20 +105,73 @@ export default function AdminApp() {
 
     return (
         <div className="max-w-5xl mx-auto w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 mb-6 gap-4">
                 <div>
                     <h2 className="text-2xl font-black text-gray-900 dark:text-white">Admin Dashboard</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">Logged in as {session.user.email}</p>
                 </div>
+
+                <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                    <button
+                        onClick={() => setActiveTab('profile')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'profile'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        Profile View
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('projects')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'projects'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        Projects Manager
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('certifications')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'certifications'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        Certifications
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('stack')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'stack'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        Stack Tech
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('messages')}
+                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'messages'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        Messages
+                    </button>
+                </div>
+
                 <button
                     onClick={handleLogout}
-                    className="mt-4 sm:mt-0 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 font-bold py-2 px-6 rounded-lg transition-colors border border-red-200 dark:border-red-800"
+                    className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 font-bold py-2 px-6 rounded-lg transition-colors border border-red-200 dark:border-red-800"
                 >
                     Sign Out
                 </button>
             </div>
 
-            <Dashboard />
+            {activeTab === 'profile' && <Dashboard />}
+            {activeTab === 'projects' && <ProjectManager />}
+            {activeTab === 'certifications' && <CertificationManager />}
+            {activeTab === 'stack' && <TechnologyManager />}
+            {activeTab === 'messages' && <ContactManager />}
         </div>
     );
 }
