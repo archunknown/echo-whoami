@@ -3,12 +3,23 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
+import CertificationCard from "../components/CertificationCard.astro";
+import StackSection from "../components/StackSection.astro";
+import ContactForm from "../components/ContactForm.astro";
 import Footer from "../components/Footer.astro";
-import { getProfile, getPublishedProjects } from "../services/api";
+import {
+	getProfile,
+	getPublishedProjects,
+	getPublishedCertifications,
+	getAllTechnologies,
+} from "../services/api";
 import { t } from "../utils/i18n";
+import { marked } from "marked";
 
 const profile = await getProfile();
 const projects = await getPublishedProjects();
+const certifications = await getPublishedCertifications();
+const technologies = await getAllTechnologies();
 
 const translatedProfile = profile
 	? {
@@ -17,6 +28,15 @@ const translatedProfile = profile
 			resume_url: t(profile.resume_url, "en"),
 	  }
 	: null;
+
+const architectureText = profile?.architecture_text as {
+	es?: string;
+	en?: string;
+};
+const dataAnalyticsText = profile?.data_analytics_text as {
+	es?: string;
+	en?: string;
+};
 
 const translatedProjects = projects?.map((project) => ({
 	...project,
@@ -27,6 +47,11 @@ const translatedProjects = projects?.map((project) => ({
 	outcome: t(project.outcome, "en"),
 }));
 
+const translatedCertifications = certifications?.map((cert) => ({
+	...cert,
+	title: t(cert.title, "en"),
+}));
+
 const uiDictionary = {
 	projects: "View Projects",
 	github: "View GitHub",
@@ -35,6 +60,18 @@ const uiDictionary = {
 	architecture: "Architecture",
 	outcome: "Outcome",
 	privateRepo: "Private",
+	certificationsTitle: "Certifications",
+	stackTitle: "Tech Stack",
+	architectureTitle: "System Architecture",
+	dataTitle: "Data & Analytics",
+	viewCredential: "View Credential",
+	contactTitle: "Get in Touch",
+	contactName: "Full Name",
+	contactEmail: "Email Address",
+	contactMessage: "Your Message",
+	contactSubmit: "Send Message",
+	contactSuccess: "Message sent successfully! I'll get back to you soon.",
+	contactError: "There was an error sending the message. Please try again.",
 };
 ---
 
@@ -43,7 +80,7 @@ const uiDictionary = {
 		class="min-h-screen flex flex-col bg-white dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-200 dark:selection:bg-blue-900"
 	>
 		<Header lang="en" />
-		<main class="grow flex flex-col font-sans">
+		<main class="grow flex flex-col font-sans reveal-hidden">
 			{
 				translatedProfile && (
 					<Hero
@@ -57,12 +94,12 @@ const uiDictionary = {
 
 			<section
 				id="proyectos"
-				class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12"
+				class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 reveal-hidden"
 			>
 				<h2
 					class="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white"
 				>
-					Projects
+					{uiDictionary.projects}
 				</h2>
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					{
@@ -71,6 +108,129 @@ const uiDictionary = {
 						))
 					}
 				</div>
+			</section>
+
+			{
+				translatedCertifications && translatedCertifications.length > 0 && (
+					<section
+						id="certifications"
+						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+					>
+						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+							{uiDictionary.certificationsTitle}
+						</h2>
+						<div class="grid grid-cols-1 gap-4">
+							{translatedCertifications.map((cert) => (
+								<CertificationCard
+									certification={cert}
+									t={uiDictionary}
+								/>
+							))}
+						</div>
+					</section>
+				)
+			}
+
+			{
+				technologies && technologies.length > 0 && (
+					<section
+						id="stack"
+						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+					>
+						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+							{uiDictionary.stackTitle}
+						</h2>
+						<StackSection technologies={technologies} />
+					</section>
+				)
+			}
+
+			{
+				(architectureText?.en || profile?.architecture_image_url) && (
+					<section
+						id="architecture"
+						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+					>
+						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
+							{uiDictionary.architectureTitle}
+						</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+							{architectureText?.en && (
+								<div class="prose prose-sm md:prose-base dark:prose-invert text-gray-700 dark:text-gray-300">
+									<div
+										set:html={marked.parse(
+											architectureText.en
+										)}
+										class="text-gray-600 dark:text-gray-400 [&>p]:mb-4 [&>strong]:text-gray-900 dark:[&>strong]:text-white [&>strong]:font-black [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>a]:text-blue-600 dark:[&>a]:text-blue-400 hover:[&>a]:underline leading-relaxed"
+									/>
+								</div>
+							)}
+							{profile?.architecture_image_url && (
+								<div class="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center p-4">
+									<img
+										src={profile.architecture_image_url}
+										alt="System Architecture Diagram"
+										loading="lazy"
+										class="w-full h-auto max-h-[400px] object-contain rounded-xl shadow-sm filter contrast-125 dark:contrast-100"
+									/>
+								</div>
+							)}
+						</div>
+					</section>
+				)
+			}
+
+			{
+				(dataAnalyticsText?.en ||
+					profile?.data_analytics_image_url) && (
+					<section
+						id="data-analytics"
+						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+					>
+						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
+							{uiDictionary.dataTitle}
+						</h2>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+							{profile?.data_analytics_image_url && (
+								<div class="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center p-4 order-last md:order-first">
+									<img
+										src={profile.data_analytics_image_url}
+										alt="Data & Analytics Metrics"
+										loading="lazy"
+										class="w-full h-auto max-h-[400px] object-contain rounded-xl shadow-sm filter contrast-125 dark:contrast-100"
+									/>
+								</div>
+							)}
+							{dataAnalyticsText?.en && (
+								<div class="prose prose-sm md:prose-base dark:prose-invert text-gray-700 dark:text-gray-300">
+									<div
+										set:html={marked.parse(
+											dataAnalyticsText.en
+										)}
+										class="text-gray-600 dark:text-gray-400 [&>p]:mb-4 [&>strong]:text-gray-900 dark:[&>strong]:text-white [&>strong]:font-black [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>a]:text-blue-600 dark:[&>a]:text-blue-400 hover:[&>a]:underline leading-relaxed"
+									/>
+								</div>
+							)}
+						</div>
+					</section>
+				)
+			}
+
+			<section
+				id="contact"
+				class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+			>
+				<ContactForm
+					t={{
+						title: uiDictionary.contactTitle,
+						nameLabel: uiDictionary.contactName,
+						emailLabel: uiDictionary.contactEmail,
+						messageLabel: uiDictionary.contactMessage,
+						submitText: uiDictionary.contactSubmit,
+						successMessage: uiDictionary.contactSuccess,
+						errorMessage: uiDictionary.contactError,
+					}}
+				/>
 			</section>
 		</main>
 		<Footer />

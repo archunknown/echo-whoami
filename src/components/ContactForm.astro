@@ -1,0 +1,154 @@
+---
+const { t } = Astro.props;
+---
+
+<div
+    class="max-w-xl mx-auto w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-sm"
+>
+    <div id="success-message" class="hidden text-center py-8">
+        <div
+            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-6"
+        >
+            <svg
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                class="w-8 h-8"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">
+            {t.successMessage || "Mensaje enviado"}
+        </h3>
+    </div>
+
+    <form id="contact-form" class="flex flex-col gap-6">
+        <div class="text-center mb-4">
+            <h2
+                class="text-3xl font-black tracking-tight text-gray-900 dark:text-white"
+            >
+                {t.title || "Contacto"}
+            </h2>
+        </div>
+
+        <div
+            id="error-message"
+            class="hidden p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium"
+        >
+        </div>
+
+        <div>
+            <label
+                for="name"
+                class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+            >
+                {t.nameLabel || "Nombre"}
+            </label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors"
+            />
+        </div>
+
+        <div>
+            <label
+                for="email"
+                class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+            >
+                {t.emailLabel || "Email"}
+            </label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors"
+            />
+        </div>
+
+        <div>
+            <label
+                for="message"
+                class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+            >
+                {t.messageLabel || "Mensaje"}
+            </label>
+            <textarea
+                id="message"
+                name="message"
+                rows="4"
+                required
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors resize-y"
+            ></textarea>
+        </div>
+
+        <button
+            type="submit"
+            id="submit-btn"
+            class="w-full bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors mt-2"
+        >
+            {t.submitText || "Enviar"}
+        </button>
+    </form>
+</div>
+
+<script>
+    import { supabase } from "../lib/supabase";
+
+    const form = document.getElementById(
+        "contact-form"
+    ) as HTMLFormElement | null;
+    const successMsg = document.getElementById("success-message");
+    const errorMsg = document.getElementById("error-message");
+    const submitBtn = document.getElementById(
+        "submit-btn"
+    ) as HTMLButtonElement | null;
+
+    if (form && submitBtn && errorMsg && successMsg) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "...";
+            errorMsg.classList.add("hidden");
+
+            const formData = new FormData(form);
+            const name = formData.get("name")?.toString();
+            const email = formData.get("email")?.toString();
+            const message = formData.get("message")?.toString();
+
+            if (!name || !email || !message) {
+                errorMsg.textContent = "Todos los campos son obligatorios.";
+                errorMsg.classList.remove("hidden");
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalText;
+                return;
+            }
+
+            const { error } = await supabase
+                .from("contact_messages")
+                .insert([{ name, email, message }]);
+
+            if (error) {
+                console.error(error);
+                errorMsg.textContent =
+                    "Error al enviar el mensaje. Verifica tu conexión.";
+                errorMsg.classList.remove("hidden");
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalText;
+            } else {
+                form.classList.add("hidden");
+                successMsg.classList.remove("hidden");
+            }
+        });
+    }
+</script>
