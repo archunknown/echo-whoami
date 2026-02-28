@@ -18,7 +18,10 @@ const { project, t } = Astro.props;
 >
     {
         project.cover_image_url && (
-            <div style="border-bottom: 1px solid var(--border-subtle); overflow: hidden; aspect-ratio: 16/9;">
+            <div
+                class="max-h-48 sm:max-h-none"
+                style="border-bottom: 1px solid var(--border-subtle); overflow: hidden; aspect-ratio: 16/9;"
+            >
                 <img
                     src={project.cover_image_url}
                     alt={project.title}
@@ -134,22 +137,33 @@ const { project, t } = Astro.props;
                         class="grid grid-cols-2 lg:grid-cols-3 gap-5 py-5"
                         style="border-top: 1px solid var(--border-subtle);"
                     >
-                        {Object.entries(project.metrics).map(([key, value]) => (
-                            <div class="flex flex-col gap-1">
-                                <span
-                                    class="text-2xl font-black"
-                                    style="color: var(--text-primary);"
+                        {Object.entries(project.metrics).map(
+                            ([key, value], index, array) => (
+                                <div
+                                    class:list={[
+                                        "flex flex-col gap-1",
+                                        {
+                                            "col-span-2 lg:col-span-1":
+                                                array.length % 2 !== 0 &&
+                                                index === array.length - 1,
+                                        },
+                                    ]}
                                 >
-                                    {String(value)}
-                                </span>
-                                <span
-                                    class="font-mono text-xs tracking-widest"
-                                    style="color: var(--text-muted);"
-                                >
-                                    {key.replace(/_/g, " ")}
-                                </span>
-                            </div>
-                        ))}
+                                    <span
+                                        class="text-2xl font-black"
+                                        style="color: var(--text-primary);"
+                                    >
+                                        {String(value)}
+                                    </span>
+                                    <span
+                                        class="font-mono text-xs tracking-widest"
+                                        style="color: var(--text-muted);"
+                                    >
+                                        {key.replace(/_/g, " ")}
+                                    </span>
+                                </div>
+                            )
+                        )}
                     </div>
                 )
         }
