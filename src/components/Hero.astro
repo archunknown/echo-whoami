@@ -1,50 +1,83 @@
 ---
+import AvatarFrame from "./AvatarFrame.astro";
+
 interface Dictionary {
     projects: string;
     github: string;
     resume: string;
 }
-
 interface Props {
     bio: string;
     resumeUrl: string;
     githubUrl: string;
+    avatarUrl?: string;
+    displayName?: string;
     t: Dictionary;
 }
-
-const { bio, resumeUrl, githubUrl, t } = Astro.props;
+const { bio, resumeUrl, githubUrl, avatarUrl, displayName, t } = Astro.props;
 ---
 
-<section
-    class="max-w-5xl mx-auto px-4 py-24 md:py-32 w-full flex flex-col items-start gap-10"
->
-    <h1
-        class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-gray-900 dark:text-white leading-[1.1]"
-    >
-        {bio}
-    </h1>
-    <div class="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
-        <a
-            href="#proyectos"
-            class="inline-flex justify-center items-center px-8 py-4 border border-transparent text-lg font-bold rounded-lg text-white bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm w-full sm:w-auto"
-        >
-            {t.projects}
-        </a>
-        <a
-            href={githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex justify-center items-center px-8 py-4 border border-gray-300 dark:border-gray-700 text-lg font-bold rounded-lg text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm w-full sm:w-auto"
-        >
-            {t.github}
-        </a>
-        <a
-            href={resumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex justify-center items-center px-8 py-4 border border-gray-300 dark:border-gray-700 text-lg font-bold rounded-lg text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm w-full sm:w-auto"
-        >
-            {t.resume}
-        </a>
+<section class="max-w-5xl mx-auto px-6 pt-12 pb-24 md:pt-16 md:pb-32 w-full">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-20 items-center">
+        <!-- Left: text content -->
+        <div class="flex flex-col items-start gap-12 order-2 md:order-1">
+            <div class="flex flex-col gap-4">
+                <p
+                    class="font-mono text-xs tracking-widest"
+                    style="color: var(--text-muted);"
+                >
+                    001 — intro
+                </p>
+                <h1
+                    class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08]"
+                    style="color: var(--text-primary);"
+                >
+                    {bio}
+                </h1>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a
+                    href="#proyectos"
+                    class="inline-flex justify-center items-center px-6 py-3 font-mono text-xs font-bold tracking-widest transition-all duration-200"
+                    style="background: var(--text-primary); color: var(--bg-primary); border: 1px solid var(--text-primary);"
+                    onmouseover="this.style.background='transparent'; this.style.color='var(--text-primary)';"
+                    onmouseout="this.style.background='var(--text-primary)'; this.style.color='var(--bg-primary)';"
+                >
+                    {t.projects}
+                </a>
+                <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex justify-center items-center px-6 py-3 font-mono text-xs font-bold tracking-widest transition-all duration-200"
+                    style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-default);"
+                    onmouseover="this.style.borderColor='var(--text-secondary)'; this.style.color='var(--text-primary)';"
+                    onmouseout="this.style.borderColor='var(--border-default)'; this.style.color='var(--text-secondary)';"
+                >
+                    {t.github}
+                </a>
+                <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex justify-center items-center px-6 py-3 font-mono text-xs font-bold tracking-widest transition-all duration-200"
+                    style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-default);"
+                    onmouseover="this.style.borderColor='var(--text-secondary)'; this.style.color='var(--text-primary)';"
+                    onmouseout="this.style.borderColor='var(--border-default)'; this.style.color='var(--text-secondary)';"
+                >
+                    {t.resume}
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: avatar (only renders if avatarUrl exists) -->
+        {
+            avatarUrl && (
+                <div class="order-1 md:order-2 flex justify-start md:justify-end">
+                    <AvatarFrame src={avatarUrl} name={displayName} />
+                </div>
+            )
+        }
     </div>
 </section>
