@@ -75,18 +75,22 @@ const uiDictionary = {
 };
 ---
 
-<Layout title="Home Portfolio" lang="en">
-	<div
-		class="min-h-screen flex flex-col bg-white dark:bg-[#050505] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-200 dark:selection:bg-blue-900"
-	>
+<Layout
+	title="echo-whoami — Portfolio"
+	lang="en"
+	description="Software engineer & data specialist. Projects, stack and contact."
+>
+	<div class="min-h-screen flex flex-col font-sans">
 		<Header lang="en" />
-		<main class="grow flex flex-col font-sans reveal-hidden">
+		<main class="grow flex flex-col font-sans">
 			{
 				translatedProfile && (
 					<Hero
 						bio={translatedProfile.bio}
 						resumeUrl={translatedProfile.resume_url || "#"}
 						githubUrl={translatedProfile.github_url || "#"}
+						avatarUrl={profile?.avatar_url || undefined}
+						displayName={profile?.display_name || undefined}
 						t={uiDictionary}
 					/>
 				)
@@ -94,14 +98,23 @@ const uiDictionary = {
 
 			<section
 				id="proyectos"
-				class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 reveal-hidden"
+				class="max-w-5xl mx-auto px-6 py-20 w-full flex flex-col gap-10 reveal-hidden"
 			>
-				<h2
-					class="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white"
-				>
-					{uiDictionary.projects}
-				</h2>
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+				<div class="flex flex-col gap-2">
+					<p
+						class="font-mono text-xs tracking-widest"
+						style="color: var(--text-muted);"
+					>
+						002 — work
+					</p>
+					<h2
+						class="text-3xl md:text-4xl font-black tracking-tight"
+						style="color: var(--text-primary);"
+					>
+						{uiDictionary.projects}
+					</h2>
+				</div>
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					{
 						translatedProjects?.map((project) => (
 							<ProjectCard project={project} t={uiDictionary} />
@@ -114,15 +127,28 @@ const uiDictionary = {
 				translatedCertifications && translatedCertifications.length > 0 && (
 					<section
 						id="certifications"
-						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+						class="max-w-5xl mx-auto px-6 py-20 w-full flex flex-col gap-10 reveal-hidden"
+						style="border-top: 1px solid var(--border-subtle);"
 					>
-						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
-							{uiDictionary.certificationsTitle}
-						</h2>
-						<div class="grid grid-cols-1 gap-4">
-							{translatedCertifications.map((cert) => (
+						<div class="flex flex-col gap-2">
+							<p
+								class="font-mono text-xs tracking-widest"
+								style="color: var(--text-muted);"
+							>
+								003 — certifications
+							</p>
+							<h2
+								class="text-3xl md:text-4xl font-black tracking-tight"
+								style="color: var(--text-primary);"
+							>
+								{uiDictionary.certificationsTitle}
+							</h2>
+						</div>
+						<div class="flex flex-col">
+							{translatedCertifications.map((cert, i) => (
 								<CertificationCard
 									certification={cert}
+									index={i}
 									t={uiDictionary}
 								/>
 							))}
@@ -135,11 +161,23 @@ const uiDictionary = {
 				technologies && technologies.length > 0 && (
 					<section
 						id="stack"
-						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+						class="max-w-5xl mx-auto px-6 py-20 w-full reveal-hidden"
+						style="border-top: 1px solid var(--border-subtle);"
 					>
-						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
-							{uiDictionary.stackTitle}
-						</h2>
+						<div class="flex flex-col gap-2 mb-10">
+							<p
+								class="font-mono text-xs tracking-widest"
+								style="color: var(--text-muted);"
+							>
+								004 — stack
+							</p>
+							<h2
+								class="text-3xl md:text-4xl font-black tracking-tight"
+								style="color: var(--text-primary);"
+							>
+								{uiDictionary.stackTitle}
+							</h2>
+						</div>
 						<StackSection technologies={technologies} />
 					</section>
 				)
@@ -149,29 +187,42 @@ const uiDictionary = {
 				(architectureText?.en || profile?.architecture_image_url) && (
 					<section
 						id="architecture"
-						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+						class="max-w-5xl mx-auto px-6 py-20 w-full reveal-hidden"
+						style="border-top: 1px solid var(--border-subtle);"
 					>
-						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
-							{uiDictionary.architectureTitle}
-						</h2>
+						<div class="flex flex-col gap-2 mb-10">
+							<p
+								class="font-mono text-xs tracking-widest"
+								style="color: var(--text-muted);"
+							>
+								005 — architecture
+							</p>
+							<h2
+								class="text-3xl md:text-4xl font-black tracking-tight"
+								style="color: var(--text-primary);"
+							>
+								{uiDictionary.architectureTitle}
+							</h2>
+						</div>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 							{architectureText?.en && (
-								<div class="prose prose-sm md:prose-base dark:prose-invert text-gray-700 dark:text-gray-300">
-									<div
-										set:html={marked.parse(
-											architectureText.en
-										)}
-										class="text-gray-600 dark:text-gray-400 [&>p]:mb-4 [&>strong]:text-gray-900 dark:[&>strong]:text-white [&>strong]:font-black [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>a]:text-blue-600 dark:[&>a]:text-blue-400 hover:[&>a]:underline leading-relaxed"
-									/>
-								</div>
+								<div
+									set:html={marked.parse(architectureText.en)}
+									class="text-sm leading-relaxed [&>p]:mb-4 [&>strong]:font-black [&>ul]:list-none [&>ul]:pl-0 [&>ul]:mb-4 [&>a]:underline"
+									style="color: var(--text-secondary);"
+								/>
 							)}
 							{profile?.architecture_image_url && (
-								<div class="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center p-4">
+								<div
+									class="w-full flex items-center justify-center p-4"
+									style="border: 1px solid var(--border-subtle);"
+								>
 									<img
 										src={profile.architecture_image_url}
 										alt="System Architecture Diagram"
 										loading="lazy"
-										class="w-full h-auto max-h-[400px] object-contain rounded-xl shadow-sm filter contrast-125 dark:contrast-100"
+										class="w-full h-auto max-h-[400px] object-contain"
+										style="filter: grayscale(100%) contrast(1.1);"
 									/>
 								</div>
 							)}
@@ -185,31 +236,46 @@ const uiDictionary = {
 					profile?.data_analytics_image_url) && (
 					<section
 						id="data-analytics"
-						class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+						class="max-w-5xl mx-auto px-6 py-20 w-full reveal-hidden"
+						style="border-top: 1px solid var(--border-subtle);"
 					>
-						<h2 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
-							{uiDictionary.dataTitle}
-						</h2>
+						<div class="flex flex-col gap-2 mb-10">
+							<p
+								class="font-mono text-xs tracking-widest"
+								style="color: var(--text-muted);"
+							>
+								006 — data & analytics
+							</p>
+							<h2
+								class="text-3xl md:text-4xl font-black tracking-tight"
+								style="color: var(--text-primary);"
+							>
+								{uiDictionary.dataTitle}
+							</h2>
+						</div>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 							{profile?.data_analytics_image_url && (
-								<div class="w-full bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center p-4 order-last md:order-first">
+								<div
+									class="w-full flex items-center justify-center p-4 order-last md:order-first"
+									style="border: 1px solid var(--border-subtle);"
+								>
 									<img
 										src={profile.data_analytics_image_url}
-										alt="Data & Analytics Metrics"
+										alt="Data & Analytics"
 										loading="lazy"
-										class="w-full h-auto max-h-[400px] object-contain rounded-xl shadow-sm filter contrast-125 dark:contrast-100"
+										class="w-full h-auto max-h-[400px] object-contain"
+										style="filter: grayscale(100%) contrast(1.1);"
 									/>
 								</div>
 							)}
 							{dataAnalyticsText?.en && (
-								<div class="prose prose-sm md:prose-base dark:prose-invert text-gray-700 dark:text-gray-300">
-									<div
-										set:html={marked.parse(
-											dataAnalyticsText.en
-										)}
-										class="text-gray-600 dark:text-gray-400 [&>p]:mb-4 [&>strong]:text-gray-900 dark:[&>strong]:text-white [&>strong]:font-black [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-4 [&>a]:text-blue-600 dark:[&>a]:text-blue-400 hover:[&>a]:underline leading-relaxed"
-									/>
-								</div>
+								<div
+									set:html={marked.parse(
+										dataAnalyticsText.en
+									)}
+									class="text-sm leading-relaxed [&>p]:mb-4 [&>strong]:font-black [&>ul]:list-none [&>ul]:pl-0 [&>ul]:mb-4 [&>a]:underline"
+									style="color: var(--text-secondary);"
+								/>
 							)}
 						</div>
 					</section>
@@ -218,7 +284,8 @@ const uiDictionary = {
 
 			<section
 				id="contact"
-				class="max-w-5xl mx-auto px-4 py-20 w-full flex flex-col gap-12 border-t border-gray-100 dark:border-gray-900 reveal-hidden"
+				class="max-w-5xl mx-auto px-6 py-20 w-full reveal-hidden"
+				style="border-top: 1px solid var(--border-subtle);"
 			>
 				<ContactForm
 					t={{
