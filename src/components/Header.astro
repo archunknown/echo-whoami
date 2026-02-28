@@ -10,7 +10,9 @@ const { lang } = Astro.props;
     style="border-bottom: 1px solid var(--border-subtle); background: var(--bg-primary);"
     class="w-full sticky top-0 z-50"
 >
-    <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div
+        class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center"
+    >
         <div class="flex items-center gap-2">
             <span
                 class="font-mono text-xs tracking-widest"
@@ -29,7 +31,7 @@ const { lang } = Astro.props;
             <a
                 href="/"
                 class:list={[
-                    "px-3 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
+                    "px-3 py-3 sm:py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
                     lang === "en"
                         ? "text-(var(--text-primary))"
                         : "text-neutral-400",
@@ -41,7 +43,7 @@ const { lang } = Astro.props;
             <a
                 href="/es"
                 class:list={[
-                    "px-3 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
+                    "px-3 py-3 sm:py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
                     lang === "es"
                         ? "text-(var(--text-primary))"
                         : "text-neutral-400",
