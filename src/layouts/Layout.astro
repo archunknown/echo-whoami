@@ -5,9 +5,18 @@ import "../styles/global.css";
 interface Props {
     title: string;
     lang: SupportedLanguage;
+    description?: string;
+    ogImage?: string;
 }
 
-const { title, lang } = Astro.props;
+const {
+    title,
+    lang,
+    description = "Portfolio — software engineer & data specialist.",
+    ogImage = "/og-default.png",
+} = Astro.props;
+
+const canonicalURL = Astro.url.href;
 ---
 
 <!DOCTYPE html>
@@ -15,12 +24,55 @@ const { title, lang } = Astro.props;
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="robots" content="index, follow" />
+
         <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalURL} />
+
+        <!-- OG Image: place a 1200x630px image at /public/og-default.png -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalURL} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImage} />
+        <meta
+            property="og:locale"
+            content={lang === "es" ? "es_ES" : "en_US"}
+        />
+
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     </head>
     <body>
-        <slot />
+        <!-- Custom cursor -->
+        <div id="cursor"></div>
+
+        <!-- Loading screen -->
+        <div
+            id="loading-screen"
+            style="position:fixed;inset:0;z-index:9999;background:#f0f0f0;display:flex;align-items:center;justify-content:center;"
+        >
+            <span
+                id="loading-wordmark"
+                style="font-family:sans-serif;font-weight:900;font-size:clamp(1.5rem,5vw,2.5rem);letter-spacing:-0.04em;color:#080808;opacity:0;transition:opacity 0.3s ease;"
+            >
+                echo-whoami
+            </span>
+        </div>
+
+        <div id="page-content" style="opacity:0;">
+            <slot />
+        </div>
 
         <script>
+            // ── Reveal animation ──────────────────────────────────────
             document.addEventListener("DOMContentLoaded", () => {
                 const observer = new IntersectionObserver(
                     (entries) => {
@@ -31,16 +83,76 @@ const { title, lang } = Astro.props;
                             }
                         });
                     },
-                    {
-                        threshold: 0.1,
-                        rootMargin: "0px 0px -50px 0px",
-                    }
+                    { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
                 );
-
-                const hiddenElements =
-                    document.querySelectorAll(".reveal-hidden");
-                hiddenElements.forEach((el) => observer.observe(el));
+                document
+                    .querySelectorAll(".reveal-hidden")
+                    .forEach((el) => observer.observe(el));
             });
+
+            // ── Loading screen ────────────────────────────────────────
+            const screen = document.getElementById("loading-screen");
+            const wordmark = document.getElementById("loading-wordmark");
+            const content = document.getElementById("page-content");
+
+            const alreadySeen = sessionStorage.getItem("intro_shown");
+
+            if (alreadySeen) {
+                if (screen) screen.style.display = "none";
+                if (content) content.style.opacity = "1";
+            } else {
+                sessionStorage.setItem("intro_shown", "1");
+
+                // Fade in wordmark sobre fondo blanco
+                setTimeout(() => {
+                    if (wordmark) wordmark.style.opacity = "1";
+                }, 80);
+
+                // Flash: fondo blanco → negro explosivo
+                setTimeout(() => {
+                    if (screen) {
+                        screen.style.transition = "background 0.08s ease";
+                        screen.style.background = "#080808";
+                        if (wordmark) wordmark.style.color = "#ededed";
+                    }
+                }, 900);
+
+                // Fade out overlay, reveal content
+                setTimeout(() => {
+                    if (screen) {
+                        screen.style.transition = "opacity 0.5s ease";
+                        screen.style.opacity = "0";
+                    }
+                    if (content) {
+                        content.style.transition = "opacity 0.5s ease";
+                        content.style.opacity = "1";
+                    }
+                }, 1300);
+
+                // Eliminar del DOM
+                setTimeout(() => {
+                    if (screen) screen.style.display = "none";
+                }, 1900);
+            }
+
+            // ── Custom cursor ─────────────────────────────────────────
+            const cursor = document.getElementById("cursor");
+            if (cursor) {
+                document.addEventListener("mousemove", (e) => {
+                    cursor.style.left = e.clientX + "px";
+                    cursor.style.top = e.clientY + "px";
+                });
+                document
+                    .querySelectorAll("a, button, [role='button']")
+                    .forEach((el) => {
+                        el.addEventListener("mouseenter", () =>
+                            cursor.classList.add("hovering")
+                        );
+                        el.addEventListener("mouseleave", () =>
+                            cursor.classList.remove("hovering")
+                        );
+                    });
+            }
         </script>
     </body>
 </html>
@@ -48,7 +160,7 @@ const { title, lang } = Astro.props;
 <style is:global>
     .reveal-hidden {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
         transition: opacity 0.6s ease-out, transform 0.6s ease-out;
         will-change: opacity, transform;
     }
