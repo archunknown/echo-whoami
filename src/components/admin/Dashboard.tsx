@@ -12,6 +12,10 @@ export default function Dashboard() {
     const [bioEn, setBioEn] = useState('');
     const [bioEs, setBioEs] = useState('');
 
+    const [displayName, setDisplayName] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState('');
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
     // Architecture & Data Analytics Fields
     const [architectureTextEn, setArchitectureTextEn] = useState('');
     const [architectureTextEs, setArchitectureTextEs] = useState('');
@@ -39,6 +43,8 @@ export default function Dashboard() {
                 setBioEn(bio.en || '');
                 setBioEs(bio.es || '');
             }
+            if (data?.display_name) setDisplayName(data.display_name);
+            if (data?.avatar_url) setAvatarUrl(data.avatar_url);
 
             if (data && data.architecture_text) {
                 const arch = data.architecture_text as { en?: string; es?: string };
@@ -93,7 +99,18 @@ export default function Dashboard() {
                 setDataAnalyticsImageFile(null);
             }
 
+            let finalAvatarUrl = avatarUrl;
+            if (avatarFile) {
+                const fileExt = avatarFile.name.split('.').pop();
+                const fileName = `avatar-${Date.now()}.${fileExt}`;
+                finalAvatarUrl = await uploadImage(avatarFile, 'portfolio-assets', fileName);
+                setAvatarUrl(finalAvatarUrl);
+                setAvatarFile(null);
+            }
+
             const updates = {
+                display_name: displayName || null,
+                avatar_url: finalAvatarUrl || null,
                 bio: {
                     en: bioEn,
                     es: bioEs
@@ -174,6 +191,48 @@ export default function Dashboard() {
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
                         placeholder="Escribe tu biografía en español..."
                     />
+                </div>
+
+                <div className="pt-6 border-t border-gray-100 dark:border-gray-800 mt-2">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Identity</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                Display Name
+                            </label>
+                            <input
+                                type="text"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                                placeholder="John Doe"
+                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                Avatar Image
+                            </label>
+                            {avatarUrl && (
+                                <div className="mb-3">
+                                    <img
+                                        src={avatarUrl}
+                                        alt="Avatar preview"
+                                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                                    />
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                        setAvatarFile(e.target.files[0]);
+                                    }
+                                }}
+                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400"
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Architecture Section */}
