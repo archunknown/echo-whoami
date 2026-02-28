@@ -76,3 +76,12 @@ textarea::placeholder {
     color: var(--text-muted);
     opacity: 1;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal-hidden {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        visibility: visible !important;
+    }
+}
