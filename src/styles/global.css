@@ -1,1 +1,78 @@
 @import "tailwindcss";
+
+:root {
+    --bg-primary: #080808;
+    --bg-secondary: #0f0f0f;
+    --bg-card: #111111;
+    --border-subtle: #1a1a1a;
+    --border-default: #2a2a2a;
+    --text-primary: #ededed;
+    --text-secondary: #555555;
+    --text-muted: #333333;
+}
+
+@media (pointer: fine) {
+    * {
+        cursor: none !important;
+    }
+
+    #cursor {
+        display: block;
+    }
+}
+
+@media (pointer: coarse) {
+    #cursor {
+        display: none;
+    }
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#cursor {
+    position: fixed;
+    width: 5px;
+    height: 5px;
+    background: var(--text-primary);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: width 0.15s ease, height 0.15s ease, opacity 0.15s ease;
+    will-change: transform;
+}
+
+#cursor.hovering {
+    width: 28px;
+    height: 28px;
+    opacity: 0.15;
+}
+
+::-webkit-scrollbar {
+    width: 3px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+}
+
+::selection {
+    background: var(--text-primary);
+    color: var(--bg-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
