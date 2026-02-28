@@ -1,43 +1,47 @@
 ---
 import type { SupportedLanguage } from "../utils/i18n";
-
 interface Props {
     lang: SupportedLanguage;
 }
-
 const { lang } = Astro.props;
 ---
 
 <header
-    class="w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]"
+    style="border-bottom: 1px solid var(--border-subtle); background: var(--bg-primary);"
+    class="w-full sticky top-0 z-50"
 >
-    <div class="max-w-5xl mx-auto px-4 py-6 flex justify-between items-center">
-        <div
-            class="text-2xl font-black tracking-tighter text-gray-900 dark:text-white"
-        >
-            echo-whoami
+    <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span
+                class="font-mono text-xs tracking-widest"
+                style="color: var(--text-secondary);"
+            >
+                echo-whoami
+            </span>
+            <div
+                class="w-1.5 h-1.5 rounded-full animate-pulse"
+                style="background-color: #ff4444;"
+            >
+            </div>
         </div>
-        <nav
-            class="flex gap-4 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 rounded-full px-5 py-2"
-        >
+
+        <nav class="flex items-center gap-1 font-mono text-xs">
             <a
                 href="/"
-                class={`text-sm font-bold tracking-wide transition-colors ${
-                    lang === "en"
-                        ? "text-gray-900 dark:text-white"
-                        : "text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                class="px-3 py-1 tracking-widest transition-opacity"
+                style={lang === "en"
+                    ? "color: var(--text-primary); opacity: 1;"
+                    : "color: var(--text-secondary); opacity: 0.4;"}
             >
                 EN
             </a>
-            <span class="text-gray-300 dark:text-gray-700">/</span>
+            <span style="color: var(--border-default);">·</span>
             <a
                 href="/es"
-                class={`text-sm font-bold tracking-wide transition-colors ${
-                    lang === "es"
-                        ? "text-gray-900 dark:text-white"
-                        : "text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+                class="px-3 py-1 tracking-widest transition-opacity"
+                style={lang === "es"
+                    ? "color: var(--text-primary); opacity: 1;"
+                    : "color: var(--text-secondary); opacity: 0.4;"}
             >
                 ES
             </a>
