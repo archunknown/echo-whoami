@@ -39,10 +39,8 @@ const { bio, resumeUrl, githubUrl, avatarUrl, displayName, t } = Astro.props;
             <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <a
                     href="#proyectos"
-                    class="inline-flex justify-center items-center px-6 py-4 sm:py-3 w-full sm:w-auto font-mono text-xs font-bold tracking-widest transition-all duration-200"
+                    class="inline-flex justify-center items-center px-6 py-4 sm:py-3 w-full sm:w-auto font-mono text-xs font-bold tracking-widest transition-all duration-200 hover:bg-transparent hover:text-(--text-primary)"
                     style="background: var(--text-primary); color: var(--bg-primary); border: 1px solid var(--text-primary);"
-                    onmouseover="this.style.background='transparent'; this.style.color='var(--text-primary)';"
-                    onmouseout="this.style.background='var(--text-primary)'; this.style.color='var(--bg-primary)';"
                 >
                     {t.projects}
                 </a>
@@ -50,10 +48,8 @@ const { bio, resumeUrl, githubUrl, avatarUrl, displayName, t } = Astro.props;
                     href={githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex justify-center items-center px-6 py-4 sm:py-3 w-full sm:w-auto font-mono text-xs font-bold tracking-widest transition-all duration-200"
+                    class="inline-flex justify-center items-center px-6 py-4 sm:py-3 w-full sm:w-auto font-mono text-xs font-bold tracking-widest transition-all duration-200 hover:border-(--text-secondary) hover:text-(--text-primary)"
                     style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-default);"
-                    onmouseover="this.style.borderColor='var(--text-secondary)'; this.style.color='var(--text-primary)';"
-                    onmouseout="this.style.borderColor='var(--border-default)'; this.style.color='var(--text-secondary)';"
                 >
                     {t.github}
                 </a>
@@ -61,10 +57,8 @@ const { bio, resumeUrl, githubUrl, avatarUrl, displayName, t } = Astro.props;
                     href={resumeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex justify-center items-center px-6 py-4 sm:py-3 w-full sm:w-auto font-mono text-xs font-bold tracking-widest transition-all duration-200"
+                    class="inline-flex justify-center items-center px-6 py-4 sm:py-3 w-full sm:w-auto font-mono text-xs font-bold tracking-widest transition-all duration-200 hover:border-(--text-secondary) hover:text-(--text-primary)"
                     style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-default);"
-                    onmouseover="this.style.borderColor='var(--text-secondary)'; this.style.color='var(--text-primary)';"
-                    onmouseout="this.style.borderColor='var(--border-default)'; this.style.color='var(--text-secondary)';"
                 >
                     {t.resume}
                 </a>
