@@ -28,20 +28,24 @@ const { lang } = Astro.props;
         <nav class="flex items-center gap-1 font-mono text-xs">
             <a
                 href="/"
-                class="px-3 py-1 tracking-widest transition-opacity"
-                style={lang === "en"
-                    ? "color: var(--text-primary); opacity: 1;"
-                    : "color: var(--text-secondary); opacity: 0.4;"}
+                class:list={[
+                    "px-3 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
+                    lang === "en"
+                        ? "text-(var(--text-primary))"
+                        : "text-neutral-400",
+                ]}
             >
                 EN
             </a>
             <span style="color: var(--border-default);">·</span>
             <a
                 href="/es"
-                class="px-3 py-1 tracking-widest transition-opacity"
-                style={lang === "es"
-                    ? "color: var(--text-primary); opacity: 1;"
-                    : "color: var(--text-secondary); opacity: 0.4;"}
+                class:list={[
+                    "px-3 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
+                    lang === "es"
+                        ? "text-(var(--text-primary))"
+                        : "text-neutral-400",
+                ]}
             >
                 ES
             </a>

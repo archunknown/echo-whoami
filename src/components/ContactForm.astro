@@ -47,11 +47,10 @@ const { t } = Astro.props;
                 type="text"
                 id="name"
                 name="name"
+                autocomplete="name"
                 required
-                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none"
+                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none transition-colors duration-200 focus:border-b-(--text-secondary) focus:outline-none"
                 style="color: var(--text-primary); border-bottom: 1px solid var(--border-default);"
-                onfocus="this.style.borderBottomColor='var(--text-secondary)';"
-                onblur="this.style.borderBottomColor='var(--border-default)';"
             />
         </div>
 
@@ -67,11 +66,11 @@ const { t } = Astro.props;
                 type="email"
                 id="email"
                 name="email"
+                autocomplete="email"
+                inputmode="email"
                 required
-                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none"
+                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none transition-colors duration-200 focus:border-b-(--text-secondary) focus:outline-none"
                 style="color: var(--text-primary); border-bottom: 1px solid var(--border-default);"
-                onfocus="this.style.borderBottomColor='var(--text-secondary)';"
-                onblur="this.style.borderBottomColor='var(--border-default)';"
             />
         </div>
 
@@ -88,20 +87,16 @@ const { t } = Astro.props;
                 name="message"
                 rows="4"
                 required
-                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none resize-none"
+                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none resize-none transition-colors duration-200 focus:border-b-(--text-secondary) focus:outline-none"
                 style="color: var(--text-primary); border-bottom: 1px solid var(--border-default);"
-                onfocus="this.style.borderBottomColor='var(--text-secondary)';"
-                onblur="this.style.borderBottomColor='var(--border-default)';"
             ></textarea>
         </div>
 
         <button
             type="submit"
             id="submit-btn"
-            class="w-full sm:w-fit inline-flex justify-center items-center px-6 py-4 sm:py-3 font-mono text-xs font-bold tracking-widest transition-all duration-200 mt-2"
+            class="w-full sm:w-fit inline-flex justify-center items-center px-6 py-4 sm:py-3 font-mono text-xs font-bold tracking-widest transition-all duration-200 mt-2 hover:bg-transparent hover:text-(--text-primary)"
             style="background: var(--text-primary); color: var(--bg-primary); border: 1px solid var(--text-primary);"
-            onmouseover="this.style.background='transparent'; this.style.color='var(--text-primary)';"
-            onmouseout="this.style.background='var(--text-primary)'; this.style.color='var(--bg-primary)';"
         >
             {t.submitText || "send"}
         </button>
