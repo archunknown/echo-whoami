@@ -2,100 +2,108 @@
 const { t } = Astro.props;
 ---
 
-<div
-    class="max-w-xl mx-auto w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 shadow-sm"
->
-    <div id="success-message" class="hidden text-center py-8">
-        <div
-            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 mb-6"
+<div class="w-full max-w-xl reveal-hidden">
+    <div id="success-message" class="hidden py-16 text-center">
+        <p
+            class="font-mono text-xs tracking-widest"
+            style="color: var(--text-secondary);"
         >
-            <svg
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                class="w-8 h-8"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"></path>
-            </svg>
-        </div>
-        <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">
-            {t.successMessage || "Mensaje enviado"}
-        </h3>
+            message sent ✓
+        </p>
     </div>
 
     <form id="contact-form" class="flex flex-col gap-6">
-        <div class="text-center mb-4">
-            <h2
-                class="text-3xl font-black tracking-tight text-gray-900 dark:text-white"
+        <div class="flex flex-col gap-2">
+            <p
+                class="font-mono text-xs tracking-widest mb-6"
+                style="color: var(--text-muted);"
             >
-                {t.title || "Contacto"}
+                004 — contact
+            </p>
+            <h2
+                class="text-3xl md:text-4xl font-black tracking-tight"
+                style="color: var(--text-primary);"
+            >
+                {t.title || "Get in Touch"}
             </h2>
         </div>
 
         <div
             id="error-message"
-            class="hidden p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium"
+            class="hidden p-4 font-mono text-xs"
+            style="color: #ff4444; border: 1px solid #ff444433;"
         >
         </div>
 
-        <div>
+        <div class="flex flex-col gap-1">
             <label
                 for="name"
-                class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+                class="font-mono text-xs tracking-widest"
+                style="color: var(--text-muted);"
             >
-                {t.nameLabel || "Nombre"}
+                {t.nameLabel || "name"}
             </label>
             <input
                 type="text"
                 id="name"
                 name="name"
                 required
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors"
+                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none"
+                style="color: var(--text-primary); border-bottom: 1px solid var(--border-default);"
+                onfocus="this.style.borderBottomColor='var(--text-secondary)';"
+                onblur="this.style.borderBottomColor='var(--border-default)';"
             />
         </div>
 
-        <div>
+        <div class="flex flex-col gap-1">
             <label
                 for="email"
-                class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+                class="font-mono text-xs tracking-widest"
+                style="color: var(--text-muted);"
             >
-                {t.emailLabel || "Email"}
+                {t.emailLabel || "email"}
             </label>
             <input
                 type="email"
                 id="email"
                 name="email"
                 required
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors"
+                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none"
+                style="color: var(--text-primary); border-bottom: 1px solid var(--border-default);"
+                onfocus="this.style.borderBottomColor='var(--text-secondary)';"
+                onblur="this.style.borderBottomColor='var(--border-default)';"
             />
         </div>
 
-        <div>
+        <div class="flex flex-col gap-1">
             <label
                 for="message"
-                class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"
+                class="font-mono text-xs tracking-widest"
+                style="color: var(--text-muted);"
             >
-                {t.messageLabel || "Mensaje"}
+                {t.messageLabel || "message"}
             </label>
             <textarea
                 id="message"
                 name="message"
                 rows="4"
                 required
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white transition-colors resize-y"
+                class="w-full px-0 py-3 bg-transparent font-sans text-sm outline-none resize-none"
+                style="color: var(--text-primary); border-bottom: 1px solid var(--border-default);"
+                onfocus="this.style.borderBottomColor='var(--text-secondary)';"
+                onblur="this.style.borderBottomColor='var(--border-default)';"
             ></textarea>
         </div>
 
         <button
             type="submit"
             id="submit-btn"
-            class="w-full bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors mt-2"
+            class="w-fit inline-flex items-center px-6 py-3 font-mono text-xs font-bold tracking-widest transition-all duration-200 mt-2"
+            style="background: var(--text-primary); color: var(--bg-primary); border: 1px solid var(--text-primary);"
+            onmouseover="this.style.background='transparent'; this.style.color='var(--text-primary)';"
+            onmouseout="this.style.background='var(--text-primary)'; this.style.color='var(--bg-primary)';"
         >
-            {t.submitText || "Enviar"}
+            {t.submitText || "send"}
         </button>
     </form>
 </div>
@@ -115,7 +123,6 @@ const { t } = Astro.props;
     if (form && submitBtn && errorMsg && successMsg) {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-
             submitBtn.disabled = true;
             const originalText = submitBtn.innerText;
             submitBtn.innerText = "...";
@@ -127,7 +134,7 @@ const { t } = Astro.props;
             const message = formData.get("message")?.toString();
 
             if (!name || !email || !message) {
-                errorMsg.textContent = "Todos los campos son obligatorios.";
+                errorMsg.textContent = "all fields are required.";
                 errorMsg.classList.remove("hidden");
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalText;
@@ -141,7 +148,7 @@ const { t } = Astro.props;
             if (error) {
                 console.error(error);
                 errorMsg.textContent =
-                    "Error al enviar el mensaje. Verifica tu conexión.";
+                    "error sending message. please try again.";
                 errorMsg.classList.remove("hidden");
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalText;

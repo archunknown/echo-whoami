@@ -9,29 +9,35 @@ interface Props {
         [key: string]: string;
     };
 }
-
 const { project, t } = Astro.props;
 ---
 
 <article
-    class="flex flex-col border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden bg-white dark:bg-[#0a0a0a] shadow-sm hover:shadow-lg transition-shadow duration-300 group"
+    class="flex flex-col reveal-hidden"
+    style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 2px;"
 >
     {
         project.cover_image_url && (
-            <div class="aspect-video w-full overflow-hidden border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <div style="border-bottom: 1px solid var(--border-subtle); overflow: hidden; aspect-ratio: 16/9;">
                 <img
                     src={project.cover_image_url}
                     alt={project.title}
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    class="w-full h-full object-cover"
+                    style="transition: transform 0.6s ease; filter: grayscale(20%);"
+                    onmouseover="this.style.transform='scale(1.03)'; this.style.filter='grayscale(0)';"
+                    onmouseout="this.style.transform='scale(1)'; this.style.filter='grayscale(20%)';"
                     loading="lazy"
                 />
             </div>
         )
     }
-    <div class="p-8 flex flex-col gap-6 grow">
-        <div>
+
+    <div class="flex flex-col gap-6 p-7 grow">
+        <!-- Header -->
+        <div class="flex flex-col gap-3">
             <h3
-                class="text-2xl font-bold text-gray-900 dark:text-white leading-tight mb-4"
+                class="text-xl font-black tracking-tight leading-snug"
+                style="color: var(--text-primary);"
             >
                 {project.title}
             </h3>
@@ -41,22 +47,10 @@ const { project, t } = Astro.props;
                         const tech = pt.technologies;
                         if (!tech) return null;
                         return (
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded">
-                                {tech.icon_slug && (
-                                    <img
-                                        src={`https://cdn.simpleicons.org/${
-                                            tech.icon_slug
-                                        }${
-                                            tech.color
-                                                ? "/" +
-                                                  tech.color.replace("#", "")
-                                                : ""
-                                        }`}
-                                        alt={tech.name}
-                                        class="w-3.5 h-3.5"
-                                        loading="lazy"
-                                    />
-                                )}
+                            <span
+                                class="font-mono text-xs px-2 py-0.5"
+                                style="color: var(--text-secondary); border: 1px solid var(--border-default);"
+                            >
                                 {tech.name}
                             </span>
                         );
@@ -65,62 +59,93 @@ const { project, t } = Astro.props;
             </div>
         </div>
 
-        <p class="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+        <!-- Summary -->
+        <p
+            class="text-sm leading-relaxed"
+            style="color: var(--text-secondary);"
+        >
             {project.summary}
         </p>
 
-        <div class="grid grid-cols-1 gap-6">
+        <!-- Details -->
+        <div class="flex flex-col gap-5">
             {
                 project.problem && (
-                    <section>
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                    <div>
+                        <p
+                            class="font-mono text-xs tracking-widest mb-1"
+                            style="color: var(--text-muted);"
+                        >
                             {t.problem}
-                        </h4>
-                        <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                        </p>
+                        <p
+                            class="text-sm leading-relaxed"
+                            style="color: var(--text-secondary);"
+                        >
                             {project.problem}
                         </p>
-                    </section>
+                    </div>
                 )
             }
-
             {
                 project.architecture && (
-                    <section>
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                    <div>
+                        <p
+                            class="font-mono text-xs tracking-widest mb-1"
+                            style="color: var(--text-muted);"
+                        >
                             {t.architecture}
-                        </h4>
-                        <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                        </p>
+                        <p
+                            class="text-sm leading-relaxed"
+                            style="color: var(--text-secondary);"
+                        >
                             {project.architecture}
                         </p>
-                    </section>
+                    </div>
                 )
             }
-
             {
                 project.outcome && (
-                    <section>
-                        <h4 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">
+                    <div>
+                        <p
+                            class="font-mono text-xs tracking-widest mb-1"
+                            style="color: var(--text-muted);"
+                        >
                             {t.outcome}
-                        </h4>
-                        <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                        </p>
+                        <p
+                            class="text-sm leading-relaxed"
+                            style="color: var(--text-secondary);"
+                        >
                             {project.outcome}
                         </p>
-                    </section>
+                    </div>
                 )
             }
         </div>
 
+        <!-- Metrics -->
         {
             project.metrics &&
                 typeof project.metrics === "object" &&
                 Object.keys(project.metrics).length > 0 && (
-                    <div class="mt-4 grid grid-cols-2 lg:grid-cols-3 gap-6 border-t border-gray-100 dark:border-gray-800 py-6">
+                    <div
+                        class="grid grid-cols-2 lg:grid-cols-3 gap-5 py-5"
+                        style="border-top: 1px solid var(--border-subtle);"
+                    >
                         {Object.entries(project.metrics).map(([key, value]) => (
                             <div class="flex flex-col gap-1">
-                                <span class="text-2xl font-black text-gray-900 dark:text-white">
+                                <span
+                                    class="text-2xl font-black"
+                                    style="color: var(--text-primary);"
+                                >
                                     {String(value)}
                                 </span>
-                                <span class="text-xs font-bold text-gray-500 dark:text-gray-500 uppercase tracking-widest">
+                                <span
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted);"
+                                >
                                     {key.replace(/_/g, " ")}
                                 </span>
                             </div>
@@ -129,8 +154,10 @@ const { project, t } = Astro.props;
                 )
         }
 
+        <!-- Footer links -->
         <div
-            class="mt-auto pt-6 flex flex-wrap gap-6 items-center border-t border-gray-100 dark:border-gray-800"
+            class="mt-auto pt-5 flex flex-wrap gap-5 items-center"
+            style="border-top: 1px solid var(--border-subtle);"
         >
             {
                 project.is_private === false ? (
@@ -140,9 +167,12 @@ const { project, t } = Astro.props;
                                 href={project.demo_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="text-sm font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-wide"
+                                class="font-mono text-xs tracking-widest transition-opacity"
+                                style="color: var(--text-secondary);"
+                                onmouseover="this.style.color='var(--text-primary)';"
+                                onmouseout="this.style.color='var(--text-secondary)';"
                             >
-                                Demo
+                                demo ↗
                             </a>
                         )}
                         {project.prod_url && (
@@ -150,9 +180,12 @@ const { project, t } = Astro.props;
                                 href={project.prod_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="text-sm font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-wide"
+                                class="font-mono text-xs tracking-widest transition-opacity"
+                                style="color: var(--text-secondary);"
+                                onmouseover="this.style.color='var(--text-primary)';"
+                                onmouseout="this.style.color='var(--text-secondary)';"
                             >
-                                Prod
+                                prod ↗
                             </a>
                         )}
                         {project.repo_url && (
@@ -160,15 +193,21 @@ const { project, t } = Astro.props;
                                 href={project.repo_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="text-sm font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-wide"
+                                class="font-mono text-xs tracking-widest transition-opacity"
+                                style="color: var(--text-secondary);"
+                                onmouseover="this.style.color='var(--text-primary)';"
+                                onmouseout="this.style.color='var(--text-secondary)';"
                             >
-                                Repo
+                                repo ↗
                             </a>
                         )}
                     </>
                 ) : (
-                    <span class="text-xs font-bold uppercase tracking-widest border border-gray-200 dark:border-gray-800 px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 rounded text-gray-500 dark:text-gray-500">
-                        {t.privateRepo || "Private"}
+                    <span
+                        class="font-mono text-xs tracking-widest"
+                        style="color: var(--text-muted);"
+                    >
+                        {t.privateRepo}
                     </span>
                 )
             }

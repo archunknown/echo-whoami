@@ -6,58 +6,38 @@ interface Technology {
     color?: string | null;
     icon_slug?: string | null;
 }
-
 interface Props {
     technologies: Technology[];
 }
-
 const { technologies } = Astro.props;
 
-// Group technologies by category safely
 const groupedTech =
     technologies?.reduce((acc, tech) => {
         const cat = tech.category || "Other";
-        if (!acc[cat]) {
-            acc[cat] = [];
-        }
+        if (!acc[cat]) acc[cat] = [];
         acc[cat].push(tech);
         return acc;
     }, {} as Record<string, Technology[]>) || {};
-
-// Optional: Sort categories if needed, or sort elements within categories
 ---
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+<div class="flex flex-col gap-10 reveal-hidden">
     {
         Object.entries(groupedTech).map(([category, techs]) => (
             <div class="flex flex-col gap-4">
-                <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-800 pb-2">
+                <p
+                    class="font-mono text-xs tracking-widest"
+                    style="color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;"
+                >
                     {category}
-                </h3>
+                </p>
                 <div class="flex flex-wrap gap-2">
                     {techs.map((tech) => (
                         <span
-                            class="inline-flex items-center gap-2 px-3 py-1 text-sm font-bold border border-transparent rounded bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                            style={
-                                tech.color
-                                    ? `border-color: ${tech.color}40; color: ${tech.color}`
-                                    : ""
-                            }
+                            class="font-mono text-xs px-3 py-1.5 transition-all duration-200"
+                            style="color: var(--text-secondary); border: 1px solid var(--border-default);"
+                            onmouseover="this.style.color='var(--text-primary)'; this.style.borderColor='var(--text-secondary)';"
+                            onmouseout="this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-default)';"
                         >
-                            {tech.icon_slug && (
-                                <img
-                                    src={`https://cdn.simpleicons.org/${
-                                        tech.icon_slug
-                                    }${
-                                        tech.color
-                                            ? "/" + tech.color.replace("#", "")
-                                            : ""
-                                    }`}
-                                    alt={tech.name}
-                                    class="w-4 h-4"
-                                    loading="lazy"
-                                />
-                            )}
                             {tech.name}
                         </span>
                     ))}

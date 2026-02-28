@@ -1,38 +1,48 @@
 ---
 interface Props {
     certification: any;
+    index: number;
     t: {
         viewCredential?: string;
         [key: string]: string | undefined;
     };
 }
-
-const { certification, t } = Astro.props;
+const { certification, index, t } = Astro.props;
 ---
 
 <article
-    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow"
+    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-5 reveal-hidden"
+    style="border-bottom: 1px solid var(--border-subtle);"
 >
-    <div>
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
-            {certification.title}
-        </h3>
-        <div
-            class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm font-medium text-gray-600 dark:text-gray-400"
+    <div class="flex items-start sm:items-center gap-5">
+        <span
+            class="font-mono text-xs w-6 shrink-0 mt-0.5 sm:mt-0"
+            style="color: var(--text-muted);"
         >
-            <span>{certification.issuer}</span>
-            {
-                certification.issue_date && (
-                    <>
-                        <span class="hidden sm:inline">&bull;</span>
-                        <span>
-                            {new Date(
-                                certification.issue_date
-                            ).toLocaleDateString()}
-                        </span>
-                    </>
-                )
-            }
+            {String(index + 1).padStart(2, "0")}
+        </span>
+        <div class="flex flex-col gap-1">
+            <h3 class="text-sm font-bold" style="color: var(--text-primary);">
+                {certification.title}
+            </h3>
+            <div
+                class="flex items-center gap-3 font-mono text-xs"
+                style="color: var(--text-muted);"
+            >
+                <span>{certification.issuer}</span>
+                {
+                    certification.issue_date && (
+                        <>
+                            <span>·</span>
+                            <span>
+                                {new Date(
+                                    certification.issue_date
+                                ).toLocaleDateString()}
+                            </span>
+                        </>
+                    )
+                }
+            </div>
         </div>
     </div>
 
@@ -42,9 +52,12 @@ const { certification, t } = Astro.props;
                 href={certification.credential_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex justify-center items-center px-4 py-2 text-sm font-bold border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-200 bg-white dark:bg-[#0a0a0a] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors uppercase tracking-wider h-fit"
+                class="font-mono text-xs tracking-widest shrink-0 sm:ml-4 transition-opacity"
+                style="color: var(--text-secondary);"
+                onmouseover="this.style.color='var(--text-primary)';"
+                onmouseout="this.style.color='var(--text-secondary)';"
             >
-                {t.viewCredential || "Credential"}
+                {t.viewCredential || "credential"} ↗
             </a>
         )
     }
