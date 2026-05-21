@@ -6,36 +6,23 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type EducationCategory = 'university' | 'technical' | 'certification' | 'complementary'
+
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
   graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
+    Tables: { [_ in never]: never }
+    Views: { [_ in never]: never }
     Functions: {
       graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
+        Args: { extensions?: Json; operationName?: string; query?: string; variables?: Json }
         Returns: Json
       }
     }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
   public: {
     Tables: {
@@ -45,30 +32,33 @@ export type Database = {
           credential_url: string | null
           id: string
           is_published: boolean | null
-          issue_date: string
+          issue_date: string | null
           issuer: string
           order_index: number | null
           title: Json
+          category: EducationCategory | null
         }
         Insert: {
           created_at?: string
           credential_url?: string | null
           id?: string
           is_published?: boolean | null
-          issue_date: string
+          issue_date?: string | null
           issuer: string
           order_index?: number | null
           title: Json
+          category?: EducationCategory | null
         }
         Update: {
           created_at?: string
           credential_url?: string | null
           id?: string
           is_published?: boolean | null
-          issue_date?: string
+          issue_date?: string | null
           issuer?: string
           order_index?: number | null
           title?: Json
+          category?: EducationCategory | null
         }
         Relationships: []
       }
@@ -96,6 +86,51 @@ export type Database = {
         }
         Relationships: []
       }
+      education: {
+        Row: {
+          id: string
+          title: Json
+          institution: Json
+          description: Json | null
+          category: EducationCategory
+          start_date: string | null
+          end_date: string | null
+          is_current: boolean | null
+          credential_url: string | null
+          is_published: boolean | null
+          order_index: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: Json
+          institution: Json
+          description?: Json | null
+          category: EducationCategory
+          start_date?: string | null
+          end_date?: string | null
+          is_current?: boolean | null
+          credential_url?: string | null
+          is_published?: boolean | null
+          order_index?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: Json
+          institution?: Json
+          description?: Json | null
+          category?: EducationCategory
+          start_date?: string | null
+          end_date?: string | null
+          is_current?: boolean | null
+          credential_url?: string | null
+          is_published?: boolean | null
+          order_index?: number | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       profile: {
         Row: {
           architecture_image_url: string | null
@@ -106,6 +141,8 @@ export type Database = {
           data_analytics_text: Json | null
           display_name: string | null
           github_url: string | null
+          linkedin_url: string | null
+          twitter_url: string | null
           id: string
           resume_url: Json | null
         }
@@ -118,6 +155,8 @@ export type Database = {
           data_analytics_text?: Json | null
           display_name?: string | null
           github_url?: string | null
+          linkedin_url?: string | null
+          twitter_url?: string | null
           id?: string
           resume_url?: Json | null
         }
@@ -130,6 +169,8 @@ export type Database = {
           data_analytics_text?: Json | null
           display_name?: string | null
           github_url?: string | null
+          linkedin_url?: string | null
+          twitter_url?: string | null
           id?: string
           resume_url?: Json | null
         }
@@ -171,8 +212,10 @@ export type Database = {
       projects: {
         Row: {
           architecture: Json
-          cover_image_url: string
+          cover_image_url: string | null
           created_at: string
+          custom_link: string | null
+          custom_link_label: string | null
           demo_url: string | null
           id: string
           is_featured: boolean | null
@@ -189,9 +232,11 @@ export type Database = {
           title: Json
         }
         Insert: {
-          architecture: Json
-          cover_image_url: string
+          architecture?: Json
+          cover_image_url?: string | null
           created_at?: string
+          custom_link?: string | null
+          custom_link_label?: string | null
           demo_url?: string | null
           id?: string
           is_featured?: boolean | null
@@ -199,18 +244,20 @@ export type Database = {
           is_published?: boolean | null
           metrics?: Json | null
           order_index?: number | null
-          outcome: Json
-          problem: Json
+          outcome?: Json
+          problem?: Json
           prod_url?: string | null
           repo_url?: string | null
           slug: string
-          summary: Json
+          summary?: Json
           title: Json
         }
         Update: {
           architecture?: Json
-          cover_image_url?: string
+          cover_image_url?: string | null
           created_at?: string
+          custom_link?: string | null
+          custom_link_label?: string | null
           demo_url?: string | null
           id?: string
           is_featured?: boolean | null
@@ -233,6 +280,7 @@ export type Database = {
           category: string
           color: string | null
           icon_slug: string | null
+          logo_url: string | null
           id: string
           name: string
         }
@@ -240,6 +288,7 @@ export type Database = {
           category: string
           color?: string | null
           icon_slug?: string | null
+          logo_url?: string | null
           id?: string
           name: string
         }
@@ -247,29 +296,21 @@ export type Database = {
           category?: string
           color?: string | null
           icon_slug?: string | null
+          logo_url?: string | null
           id?: string
           name?: string
         }
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
@@ -351,45 +392,7 @@ export type TablesUpdate<
   : never
   : never
 
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
-
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
-  public: {
-    Enums: {},
-  },
+  graphql_public: { Enums: {} },
+  public: { Enums: {} },
 } as const

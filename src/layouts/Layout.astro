@@ -51,20 +51,25 @@ const canonicalURL = Astro.url.href;
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     </head>
     <body>
-        <!-- Custom cursor -->
-        <div id="cursor"></div>
+        <!-- Custom cursor (fine pointer devices only) -->
+        <div id="cursor">
+            <div id="cursor-dot"></div>
+            <div id="cursor-ring"></div>
+        </div>
 
-        <!-- Loading screen -->
+        <!-- Loading screen — starts dark to avoid white flash -->
         <div
             id="loading-screen"
-            style="position:fixed;inset:0;z-index:9999;background:#f0f0f0;display:flex;align-items:center;justify-content:center;"
+            style="position:fixed;inset:0;z-index:9999;background:#080808;display:flex;align-items:center;justify-content:center;"
         >
-            <span
-                id="loading-wordmark"
-                style="font-family:sans-serif;font-weight:900;font-size:clamp(1.5rem,5vw,2.5rem);letter-spacing:-0.04em;color:#080808;opacity:0;transition:opacity 0.3s ease;"
-            >
-                echo-whoami
-            </span>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;opacity:0;transition:opacity 0.4s ease;" id="loading-content">
+                <span
+                    style="font-family:monospace;font-weight:900;font-size:clamp(1.2rem,4vw,2rem);letter-spacing:0.15em;color:#f0f0f0;"
+                >
+                    echo-whoami
+                </span>
+                <div style="width:40px;height:1px;background:#8b0000;transform:scaleX(0);transform-origin:left;transition:transform 0.6s ease;" id="loading-bar"></div>
+            </div>
         </div>
 
         <div id="page-content" style="opacity:0;">
@@ -92,7 +97,8 @@ const canonicalURL = Astro.url.href;
 
             // ── Loading screen ────────────────────────────────────────
             const screen = document.getElementById("loading-screen");
-            const wordmark = document.getElementById("loading-wordmark");
+            const loadingContent = document.getElementById("loading-content");
+            const loadingBar = document.getElementById("loading-bar");
             const content = document.getElementById("page-content");
 
             const alreadySeen = sessionStorage.getItem("intro_shown");
@@ -103,21 +109,17 @@ const canonicalURL = Astro.url.href;
             } else {
                 sessionStorage.setItem("intro_shown", "1");
 
-                // Fade in wordmark sobre fondo blanco
+                // Fade in content
                 setTimeout(() => {
-                    if (wordmark) wordmark.style.opacity = "1";
-                }, 80);
+                    if (loadingContent) loadingContent.style.opacity = "1";
+                }, 100);
 
-                // Flash: fondo blanco → negro explosivo
+                // Animate the red bar
                 setTimeout(() => {
-                    if (screen) {
-                        screen.style.transition = "background 0.08s ease";
-                        screen.style.background = "#080808";
-                        if (wordmark) wordmark.style.color = "#ededed";
-                    }
-                }, 900);
+                    if (loadingBar) loadingBar.style.transform = "scaleX(1)";
+                }, 300);
 
-                // Fade out overlay, reveal content
+                // Fade out overlay, reveal page
                 setTimeout(() => {
                     if (screen) {
                         screen.style.transition = "opacity 0.5s ease";
@@ -127,31 +129,43 @@ const canonicalURL = Astro.url.href;
                         content.style.transition = "opacity 0.5s ease";
                         content.style.opacity = "1";
                     }
-                }, 1300);
+                }, 1100);
 
-                // Eliminar del DOM
                 setTimeout(() => {
                     if (screen) screen.style.display = "none";
-                }, 1900);
+                }, 1700);
             }
 
-            // ── Custom cursor ─────────────────────────────────────────
+            // ── Custom cursor (fine pointer only) ─────────────────────
             const cursor = document.getElementById("cursor");
-            if (cursor) {
+            if (cursor && window.matchMedia("(pointer: fine)").matches) {
+                let curX = 0, curY = 0;
+                let rafId: number;
+
                 document.addEventListener("mousemove", (e) => {
-                    cursor.style.left = e.clientX + "px";
-                    cursor.style.top = e.clientY + "px";
-                });
-                document
-                    .querySelectorAll("a, button, [role='button']")
-                    .forEach((el) => {
-                        el.addEventListener("mouseenter", () =>
-                            cursor.classList.add("hovering")
-                        );
-                        el.addEventListener("mouseleave", () =>
-                            cursor.classList.remove("hovering")
-                        );
+                    curX = e.clientX;
+                    curY = e.clientY;
+                    cancelAnimationFrame(rafId);
+                    rafId = requestAnimationFrame(() => {
+                        cursor.style.transform = `translate(${curX}px, ${curY}px)`;
                     });
+                });
+
+                document.addEventListener("mousedown", () => cursor.classList.add("clicking"));
+                document.addEventListener("mouseup", () => cursor.classList.remove("clicking"));
+
+                const addHoverListeners = (root: Document | Element) => {
+                    root.querySelectorAll("a, button, [role='button'], label, input, textarea, select").forEach((el) => {
+                        el.addEventListener("mouseenter", () => cursor.classList.add("hovering"));
+                        el.addEventListener("mouseleave", () => cursor.classList.remove("hovering"));
+                    });
+                };
+
+                addHoverListeners(document);
+
+                // Re-apply listeners when React mounts dynamic elements
+                const mo = new MutationObserver(() => addHoverListeners(document));
+                mo.observe(document.body, { childList: true, subtree: true });
             }
         </script>
     </body>
