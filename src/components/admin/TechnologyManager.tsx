@@ -128,7 +128,7 @@ export default function TechnologyManager() {
                 {error && <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#1a0000', border: '1px solid #8b0000', color: '#c0392b', fontFamily: 'monospace', fontSize: '0.75rem', borderRadius: '2px' }}>{error}</div>}
 
                 <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label style={labelStyle}>Name *</label>
                             <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. React" style={inputStyle} />
@@ -141,7 +141,7 @@ export default function TechnologyManager() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label style={labelStyle}>SimpleIcons slug (optional)</label>
                             <input type="text" value={iconSlug} onChange={e => setIconSlug(e.target.value)} placeholder="e.g. react, nodedotjs" style={inputStyle} />
