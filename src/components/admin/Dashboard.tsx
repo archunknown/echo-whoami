@@ -21,12 +21,7 @@ export default function Dashboard() {
     const [resumeUrlEn, setResumeUrlEn] = useState('');
     const [resumeUrlEs, setResumeUrlEs] = useState('');
 
-    // Architecture & Data Analytics Fields
-    const [architectureTextEn, setArchitectureTextEn] = useState('');
-    const [architectureTextEs, setArchitectureTextEs] = useState('');
-    const [architectureImageUrl, setArchitectureImageUrl] = useState('');
-    const [architectureImageFile, setArchitectureImageFile] = useState<File | null>(null);
-
+    // Data Analytics Fields
     const [dataAnalyticsTextEn, setDataAnalyticsTextEn] = useState('');
     const [dataAnalyticsTextEs, setDataAnalyticsTextEs] = useState('');
     const [dataAnalyticsImageUrl, setDataAnalyticsImageUrl] = useState('');
@@ -59,15 +54,6 @@ export default function Dashboard() {
                 setResumeUrlEs(ru.es || '');
             }
 
-            if (data && data.architecture_text) {
-                const arch = data.architecture_text as { en?: string; es?: string };
-                setArchitectureTextEn(arch.en || '');
-                setArchitectureTextEs(arch.es || '');
-            }
-            if (data && data.architecture_image_url) {
-                setArchitectureImageUrl(data.architecture_image_url);
-            }
-
             if (data && data.data_analytics_text) {
                 const dataText = data.data_analytics_text as { en?: string; es?: string };
                 setDataAnalyticsTextEn(dataText.en || '');
@@ -93,16 +79,7 @@ export default function Dashboard() {
         setSuccessMsg(null);
 
         try {
-            let finalArchitectureImageUrl = architectureImageUrl;
             let finalDataAnalyticsImageUrl = dataAnalyticsImageUrl;
-
-            if (architectureImageFile) {
-                const fileExt = architectureImageFile.name.split('.').pop();
-                const fileName = `architecture-${Date.now()}.${fileExt}`;
-                finalArchitectureImageUrl = await uploadImage(architectureImageFile, 'portfolio-assets', fileName);
-                setArchitectureImageUrl(finalArchitectureImageUrl);
-                setArchitectureImageFile(null);
-            }
 
             if (dataAnalyticsImageFile) {
                 const fileExt = dataAnalyticsImageFile.name.split('.').pop();
@@ -129,8 +106,6 @@ export default function Dashboard() {
                 linkedin_url: linkedinUrl.trim() || null,
                 twitter_url: twitterUrl.trim() || null,
                 resume_url: resumeUrlEn || resumeUrlEs ? { en: resumeUrlEn, es: resumeUrlEs } : null,
-                architecture_text: architectureTextEn || architectureTextEs ? { en: architectureTextEn, es: architectureTextEs } : null,
-                architecture_image_url: finalArchitectureImageUrl || null,
                 data_analytics_text: dataAnalyticsTextEn || dataAnalyticsTextEs ? { en: dataAnalyticsTextEn, es: dataAnalyticsTextEs } : null,
                 data_analytics_image_url: finalDataAnalyticsImageUrl || null,
             };
@@ -192,9 +167,13 @@ export default function Dashboard() {
                         <div>
                             <label className="block font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Avatar Image</label>
                             {avatarUrl && (
-                                <img src={avatarUrl} alt="Avatar" className="w-14 h-14 rounded-full object-cover mb-3" style={{ border: '1px solid var(--border-default)' }} />
+                                <div className="flex items-center gap-3 mb-3">
+                                    <img src={avatarUrl} alt="Avatar" className="w-14 h-14 rounded-full object-cover" style={{ border: '1px solid var(--border-default)' }} />
+                                    <button type="button" onClick={() => { setAvatarUrl(''); setAvatarFile(null); }} className="font-mono text-xs" style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '0.2rem 0.5rem', borderRadius: '2px', background: 'none', cursor: 'pointer' }}>× remove</button>
+                                </div>
                             )}
                             <input type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) setAvatarFile(e.target.files[0]); }} className="text-sm" style={{ color: 'var(--text-secondary)' }} />
+                            {avatarFile && <p className="font-mono text-xs mt-1" style={{ color: 'var(--color-accent)' }}>New file: {avatarFile.name}</p>}
                         </div>
                         <DashInput label="GitHub URL" value={githubUrl} onChange={setGithubUrl} placeholder="https://github.com/username" />
                         <DashInput label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/username" />
@@ -210,30 +189,22 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Architecture Section */}
-                <div className="pt-6 border-t mt-2" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <p className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>04 — system architecture</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <DashTextarea label="Description (EN) — markdown supported" value={architectureTextEn} onChange={setArchitectureTextEn} rows={4} />
-                        <DashTextarea label="Description (ES) — markdown soportado" value={architectureTextEs} onChange={setArchitectureTextEs} rows={4} />
-                        <div className="md:col-span-2">
-                            <label className="block font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Architecture Image</label>
-                            {architectureImageUrl && <img src={architectureImageUrl} alt="Architecture" className="h-28 object-contain mb-3" style={{ border: '1px solid var(--border-subtle)' }} />}
-                            <input type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) setArchitectureImageFile(e.target.files[0]); }} className="text-sm" style={{ color: 'var(--text-secondary)' }} />
-                        </div>
-                    </div>
-                </div>
-
                 {/* Data Analytics Section */}
                 <div className="pt-6 border-t mt-2" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <p className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>05 — data & analytics</p>
+                    <p className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>04 — data & analytics</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <DashTextarea label="Description (EN) — markdown supported" value={dataAnalyticsTextEn} onChange={setDataAnalyticsTextEn} rows={4} />
                         <DashTextarea label="Description (ES) — markdown soportado" value={dataAnalyticsTextEs} onChange={setDataAnalyticsTextEs} rows={4} />
                         <div className="md:col-span-2">
                             <label className="block font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Analytics Image</label>
-                            {dataAnalyticsImageUrl && <img src={dataAnalyticsImageUrl} alt="Analytics" className="h-28 object-contain mb-3" style={{ border: '1px solid var(--border-subtle)' }} />}
+                            {dataAnalyticsImageUrl && (
+                                <div className="flex items-center gap-3 mb-3">
+                                    <img src={dataAnalyticsImageUrl} alt="Analytics" className="h-24 object-contain" style={{ border: '1px solid var(--border-subtle)' }} />
+                                    <button type="button" onClick={() => { setDataAnalyticsImageUrl(''); setDataAnalyticsImageFile(null); }} className="font-mono text-xs" style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '0.2rem 0.5rem', borderRadius: '2px', background: 'none', cursor: 'pointer' }}>× remove</button>
+                                </div>
+                            )}
                             <input type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) setDataAnalyticsImageFile(e.target.files[0]); }} className="text-sm" style={{ color: 'var(--text-secondary)' }} />
+                            {dataAnalyticsImageFile && <p className="font-mono text-xs mt-1" style={{ color: 'var(--color-accent)' }}>New file: {dataAnalyticsImageFile.name}</p>}
                         </div>
                     </div>
                 </div>

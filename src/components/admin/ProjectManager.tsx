@@ -184,7 +184,7 @@ export default function ProjectManager() {
                 metrics: parsedMetrics,
             };
 
-            if (finalImageUrl) projectData.cover_image_url = finalImageUrl;
+            projectData.cover_image_url = finalImageUrl || null;
 
             let savedId = editingId;
             if (editingId) {
@@ -327,7 +327,16 @@ export default function ProjectManager() {
                     <fieldset style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
                         <legend className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>07 — cover image</legend>
                         {coverImageUrl && !coverImageFile && (
-                            <img src={coverImageUrl} alt="Current cover" className="h-24 object-cover mb-3" style={{ border: '1px solid var(--border-subtle)' }} />
+                            <div className="flex items-center gap-3 mb-3">
+                                <img src={coverImageUrl} alt="Current cover" className="h-24 object-cover" style={{ border: '1px solid var(--border-subtle)' }} />
+                                <button type="button" onClick={() => { setCoverImageUrl(''); setCoverImageFile(null); }} className="font-mono text-xs" style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '0.2rem 0.5rem', borderRadius: '2px', background: 'none', cursor: 'pointer' }}>× remove</button>
+                            </div>
+                        )}
+                        {coverImageFile && (
+                            <div className="flex items-center gap-3 mb-3">
+                                <p className="font-mono text-xs" style={{ color: 'var(--color-accent)' }}>New file: {coverImageFile.name}</p>
+                                <button type="button" onClick={() => setCoverImageFile(null)} className="font-mono text-xs" style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '0.2rem 0.5rem', borderRadius: '2px', background: 'none', cursor: 'pointer' }}>× cancel</button>
+                            </div>
                         )}
                         <input
                             type="file"
