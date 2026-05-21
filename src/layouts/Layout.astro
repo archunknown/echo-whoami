@@ -52,10 +52,8 @@ const canonicalURL = Astro.url.href;
     </head>
     <body>
         <!-- Custom cursor (fine pointer devices only) -->
-        <div id="cursor">
-            <div id="cursor-dot"></div>
-            <div id="cursor-ring"></div>
-        </div>
+        <div id="cursor-dot"></div>
+        <div id="cursor-ring"></div>
 
         <!-- Loading screen — starts dark to avoid white flash -->
         <div
@@ -137,27 +135,42 @@ const canonicalURL = Astro.url.href;
             }
 
             // ── Custom cursor (fine pointer only) ─────────────────────
-            const cursor = document.getElementById("cursor");
-            if (cursor && window.matchMedia("(pointer: fine)").matches) {
-                let curX = 0, curY = 0;
-                let rafId: number;
+            const dot = document.getElementById("cursor-dot") as HTMLElement | null;
+            const ring = document.getElementById("cursor-ring") as HTMLElement | null;
+
+            if (dot && ring && window.matchMedia("(pointer: fine)").matches) {
+                let dotX = -100, dotY = -100;
+                let ringX = -100, ringY = -100;
+                let rafRunning = false;
+
+                function animateRing() {
+                    ringX += (dotX - ringX) * 0.12;
+                    ringY += (dotY - ringY) * 0.12;
+                    ring!.style.transform = `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`;
+                    if (Math.abs(dotX - ringX) > 0.1 || Math.abs(dotY - ringY) > 0.1) {
+                        requestAnimationFrame(animateRing);
+                    } else {
+                        rafRunning = false;
+                    }
+                }
 
                 document.addEventListener("mousemove", (e) => {
-                    curX = e.clientX;
-                    curY = e.clientY;
-                    cancelAnimationFrame(rafId);
-                    rafId = requestAnimationFrame(() => {
-                        cursor.style.transform = `translate(${curX}px, ${curY}px)`;
-                    });
+                    dotX = e.clientX;
+                    dotY = e.clientY;
+                    dot!.style.transform = `translate(calc(${dotX}px - 50%), calc(${dotY}px - 50%))`;
+                    if (!rafRunning) {
+                        rafRunning = true;
+                        requestAnimationFrame(animateRing);
+                    }
                 });
 
-                document.addEventListener("mousedown", () => cursor.classList.add("clicking"));
-                document.addEventListener("mouseup", () => cursor.classList.remove("clicking"));
+                document.addEventListener("mousedown", () => document.body.classList.add("cursor-clicking"));
+                document.addEventListener("mouseup", () => document.body.classList.remove("cursor-clicking"));
 
                 const addHoverListeners = (root: Document | Element) => {
                     root.querySelectorAll("a, button, [role='button'], label, input, textarea, select").forEach((el) => {
-                        el.addEventListener("mouseenter", () => cursor.classList.add("hovering"));
-                        el.addEventListener("mouseleave", () => cursor.classList.remove("hovering"));
+                        el.addEventListener("mouseenter", () => document.body.classList.add("cursor-hovering"));
+                        el.addEventListener("mouseleave", () => document.body.classList.remove("cursor-hovering"));
                     });
                 };
 
@@ -167,6 +180,17 @@ const canonicalURL = Astro.url.href;
                 const mo = new MutationObserver(() => addHoverListeners(document));
                 mo.observe(document.body, { childList: true, subtree: true });
             }
+
+            // ── Whoami easter egg ─────────────────────────────────────
+            let keyBuffer = "";
+            document.addEventListener("keydown", (e) => {
+                const target = e.target as HTMLElement;
+                if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+                keyBuffer = (keyBuffer + e.key).slice(-6);
+                if (keyBuffer === "whoami") {
+                    window.location.href = "/admin";
+                }
+            });
         </script>
     </body>
 </html>

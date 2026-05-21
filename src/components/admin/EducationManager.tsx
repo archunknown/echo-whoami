@@ -175,7 +175,7 @@ export default function EducationManager() {
 
                 <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {/* Category + Order + Published */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label style={labelStyle}>Category *</label>
                             <select value={category} onChange={e => setCategory(e.target.value as EducationCategory)} style={{ ...inputStyle }}>
@@ -195,19 +195,19 @@ export default function EducationManager() {
                     </div>
 
                     {/* Titles */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div><label style={labelStyle}>Title (EN) *</label><input type="text" required value={titleEn} onChange={e => setTitleEn(e.target.value)} style={inputStyle} /></div>
                         <div><label style={labelStyle}>Title (ES)</label><input type="text" value={titleEs} onChange={e => setTitleEs(e.target.value)} style={inputStyle} /></div>
                     </div>
 
                     {/* Institutions */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div><label style={labelStyle}>Institution (EN) *</label><input type="text" required value={institutionEn} onChange={e => setInstitutionEn(e.target.value)} style={inputStyle} /></div>
                         <div><label style={labelStyle}>Institution (ES)</label><input type="text" value={institutionEs} onChange={e => setInstitutionEs(e.target.value)} style={inputStyle} /></div>
                     </div>
 
                     {/* Description */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label style={labelStyle}>Description (EN)</label>
                             <textarea value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
@@ -219,7 +219,7 @@ export default function EducationManager() {
                     </div>
 
                     {/* Dates */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', alignItems: 'end' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                         <div><label style={labelStyle}>Start Date</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} /></div>
                         <div>
                             <label style={labelStyle}>End Date</label>
