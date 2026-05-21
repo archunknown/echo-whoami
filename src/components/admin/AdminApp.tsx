@@ -17,6 +17,7 @@ export default function AdminApp() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('profile');
+    const [messageCount, setMessageCount] = useState(0);
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,6 +33,14 @@ export default function AdminApp() {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    useEffect(() => {
+        if (!session) return;
+        supabase
+            .from('contact_messages')
+            .select('id', { count: 'exact', head: true })
+            .then(({ count }) => setMessageCount(count ?? 0));
+    }, [session]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -119,13 +128,13 @@ export default function AdminApp() {
         );
     }
 
-    const TABS: { id: Tab; label: string }[] = [
+    const TABS: { id: Tab; label: string; badge?: number }[] = [
         { id: 'profile', label: 'profile' },
         { id: 'projects', label: 'projects' },
         { id: 'certifications', label: 'certifications' },
         { id: 'education', label: 'education' },
         { id: 'stack', label: 'stack' },
-        { id: 'messages', label: 'messages' },
+        { id: 'messages', label: 'messages', badge: messageCount },
     ];
 
     return (
@@ -179,6 +188,21 @@ export default function AdminApp() {
                 {TABS.map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={tabStyle(tab)}>
                         {tab.label}
+                        {tab.badge != null && tab.badge > 0 && (
+                            <span style={{
+                                marginLeft: '0.4rem',
+                                padding: '0.05rem 0.35rem',
+                                background: 'var(--color-accent)',
+                                color: '#fff',
+                                borderRadius: '10px',
+                                fontSize: '0.6rem',
+                                fontWeight: 700,
+                                lineHeight: 1.4,
+                                verticalAlign: 'middle',
+                            }}>
+                                {tab.badge}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>

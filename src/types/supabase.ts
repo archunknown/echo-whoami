@@ -133,12 +133,8 @@ export type Database = {
       }
       profile: {
         Row: {
-          architecture_image_url: string | null
-          architecture_text: Json | null
           avatar_url: string | null
           bio: Json | null
-          data_analytics_image_url: string | null
-          data_analytics_text: Json | null
           display_name: string | null
           github_url: string | null
           linkedin_url: string | null
@@ -147,12 +143,8 @@ export type Database = {
           resume_url: Json | null
         }
         Insert: {
-          architecture_image_url?: string | null
-          architecture_text?: Json | null
           avatar_url?: string | null
           bio?: Json | null
-          data_analytics_image_url?: string | null
-          data_analytics_text?: Json | null
           display_name?: string | null
           github_url?: string | null
           linkedin_url?: string | null
@@ -161,12 +153,8 @@ export type Database = {
           resume_url?: Json | null
         }
         Update: {
-          architecture_image_url?: string | null
-          architecture_text?: Json | null
           avatar_url?: string | null
           bio?: Json | null
-          data_analytics_image_url?: string | null
-          data_analytics_text?: Json | null
           display_name?: string | null
           github_url?: string | null
           linkedin_url?: string | null

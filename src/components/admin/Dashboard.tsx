@@ -21,11 +21,6 @@ export default function Dashboard() {
     const [resumeUrlEn, setResumeUrlEn] = useState('');
     const [resumeUrlEs, setResumeUrlEs] = useState('');
 
-    // Data Analytics Fields
-    const [dataAnalyticsTextEn, setDataAnalyticsTextEn] = useState('');
-    const [dataAnalyticsTextEs, setDataAnalyticsTextEs] = useState('');
-    const [dataAnalyticsImageUrl, setDataAnalyticsImageUrl] = useState('');
-    const [dataAnalyticsImageFile, setDataAnalyticsImageFile] = useState<File | null>(null);
 
     useEffect(() => {
         loadProfile();
@@ -54,14 +49,6 @@ export default function Dashboard() {
                 setResumeUrlEs(ru.es || '');
             }
 
-            if (data && data.data_analytics_text) {
-                const dataText = data.data_analytics_text as { en?: string; es?: string };
-                setDataAnalyticsTextEn(dataText.en || '');
-                setDataAnalyticsTextEs(dataText.es || '');
-            }
-            if (data && data.data_analytics_image_url) {
-                setDataAnalyticsImageUrl(data.data_analytics_image_url);
-            }
         } catch (err: any) {
             console.error(err);
             setError('Failed to load profile data.');
@@ -79,16 +66,6 @@ export default function Dashboard() {
         setSuccessMsg(null);
 
         try {
-            let finalDataAnalyticsImageUrl = dataAnalyticsImageUrl;
-
-            if (dataAnalyticsImageFile) {
-                const fileExt = dataAnalyticsImageFile.name.split('.').pop();
-                const fileName = `data-analytics-${Date.now()}.${fileExt}`;
-                finalDataAnalyticsImageUrl = await uploadImage(dataAnalyticsImageFile, 'portfolio-assets', fileName);
-                setDataAnalyticsImageUrl(finalDataAnalyticsImageUrl);
-                setDataAnalyticsImageFile(null);
-            }
-
             let finalAvatarUrl = avatarUrl;
             if (avatarFile) {
                 const fileExt = avatarFile.name.split('.').pop();
@@ -106,8 +83,6 @@ export default function Dashboard() {
                 linkedin_url: linkedinUrl.trim() || null,
                 twitter_url: twitterUrl.trim() || null,
                 resume_url: resumeUrlEn || resumeUrlEs ? { en: resumeUrlEn, es: resumeUrlEs } : null,
-                data_analytics_text: dataAnalyticsTextEn || dataAnalyticsTextEs ? { en: dataAnalyticsTextEn, es: dataAnalyticsTextEs } : null,
-                data_analytics_image_url: finalDataAnalyticsImageUrl || null,
             };
 
             await updateProfile(profile.id, updates);
@@ -186,26 +161,6 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <DashInput label="CV URL (EN)" value={resumeUrlEn} onChange={setResumeUrlEn} placeholder="https://..." />
                         <DashInput label="CV URL (ES)" value={resumeUrlEs} onChange={setResumeUrlEs} placeholder="https://..." />
-                    </div>
-                </div>
-
-                {/* Data Analytics Section */}
-                <div className="pt-6 border-t mt-2" style={{ borderColor: 'var(--border-subtle)' }}>
-                    <p className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>04 — data & analytics</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <DashTextarea label="Description (EN) — markdown supported" value={dataAnalyticsTextEn} onChange={setDataAnalyticsTextEn} rows={4} />
-                        <DashTextarea label="Description (ES) — markdown soportado" value={dataAnalyticsTextEs} onChange={setDataAnalyticsTextEs} rows={4} />
-                        <div className="md:col-span-2">
-                            <label className="block font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Analytics Image</label>
-                            {dataAnalyticsImageUrl && (
-                                <div className="flex items-center gap-3 mb-3">
-                                    <img src={dataAnalyticsImageUrl} alt="Analytics" className="h-24 object-contain" style={{ border: '1px solid var(--border-subtle)' }} />
-                                    <button type="button" onClick={() => { setDataAnalyticsImageUrl(''); setDataAnalyticsImageFile(null); }} className="font-mono text-xs" style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', padding: '0.2rem 0.5rem', borderRadius: '2px', background: 'none', cursor: 'pointer' }}>× remove</button>
-                                </div>
-                            )}
-                            <input type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) setDataAnalyticsImageFile(e.target.files[0]); }} className="text-sm" style={{ color: 'var(--text-secondary)' }} />
-                            {dataAnalyticsImageFile && <p className="font-mono text-xs mt-1" style={{ color: 'var(--color-accent)' }}>New file: {dataAnalyticsImageFile.name}</p>}
-                        </div>
                     </div>
                 </div>
 
