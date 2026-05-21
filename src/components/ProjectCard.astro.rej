@@ -1,0 +1,106 @@
+diff a/src/components/ProjectCard.astro b/src/components/ProjectCard.astro	(rejected hunks)
+@@ -171,51 +171,60 @@ const { project, t } = Astro.props;
+             class="mt-auto pt-5 flex flex-wrap gap-6 sm:gap-5 items-center"
+             style="border-top: 1px solid var(--border-subtle);"
+         >
++            {project.demo_url && (
++                <a
++                    href={project.demo_url}
++                    target="_blank"
++                    rel="noopener noreferrer"
++                    class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
++                    style="color: var(--text-secondary);"
++                >
++                    demo ↗
++                </a>
++            )}
++            {project.prod_url && (
++                <a
++                    href={project.prod_url}
++                    target="_blank"
++                    rel="noopener noreferrer"
++                    class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
++                    style="color: var(--text-secondary);"
++                >
++                    prod ↗
++                </a>
++            )}
++            {project.custom_link && (
++                <a
++                    href={project.custom_link}
++                    target="_blank"
++                    rel="noopener noreferrer"
++                    class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
++                    style="color: var(--text-secondary);"
++                >
++                    {project.custom_link_label || 'link'} ↗
++                </a>
++            )}
+             {
+-                project.is_private === false ? (
+-                    <>
+-                        {project.demo_url && (
+-                            <a
+-                                href={project.demo_url}
+-                                target="_blank"
+-                                rel="noopener noreferrer"
+-                                class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+-                                style="color: var(--text-secondary);"
+-                            >
+-                                demo ↗
+-                            </a>
+-                        )}
+-                        {project.prod_url && (
+-                            <a
+-                                href={project.prod_url}
+-                                target="_blank"
+-                                rel="noopener noreferrer"
+-                                class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+-                                style="color: var(--text-secondary);"
+-                            >
+-                                prod ↗
+-                            </a>
+-                        )}
+-                        {project.repo_url && (
+-                            <a
+-                                href={project.repo_url}
+-                                target="_blank"
+-                                rel="noopener noreferrer"
+-                                class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+-                                style="color: var(--text-secondary);"
+-                            >
+-                                repo ↗
+-                            </a>
+-                        )}
+-                    </>
+-                ) : (
+-                    <span
+-                        class="font-mono text-xs tracking-widest"
+-                        style="color: var(--text-muted);"
+-                    >
+-                        {t.privateRepo}
+-                    </span>
+-                )
++                project.is_private
++                    ? (
++                        <span
++                            class="font-mono text-xs tracking-widest"
++                            style="color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 0.125rem 0.5rem;"
++                        >
++                            🔒 {t.privateRepo}
++                        </span>
++                    )
++                    : project.repo_url && (
++                        <a
++                            href={project.repo_url}
++                            target="_blank"
++                            rel="noopener noreferrer"
++                            class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
++                            style="color: var(--text-secondary);"
++                        >
++                            repo ↗
++                        </a>
++                    )
+             }
+         </div>
+     </div>

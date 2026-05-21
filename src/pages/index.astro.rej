@@ -1,0 +1,165 @@
+diff a/src/pages/index.astro b/src/pages/index.astro	(rejected hunks)
+@@ -9,17 +9,21 @@ import ContactForm from "../components/ContactForm.astro";
+ import Footer from "../components/Footer.astro";
+ import {
+ 	getProfile,
++	getFeaturedProjects,
+ 	getPublishedProjects,
+ 	getPublishedCertifications,
+ 	getAllTechnologies,
++	getPublishedEducation,
+ } from "../services/api";
+ import { t } from "../utils/i18n";
+ import { marked } from "marked";
+ 
+ const profile = await getProfile();
+-const projects = await getPublishedProjects();
++const featuredProjects = await getFeaturedProjects();
++const allProjects = await getPublishedProjects();
+ const certifications = await getPublishedCertifications();
+ const technologies = await getAllTechnologies();
++const educationEntries = await getPublishedEducation();
+ 
+ const translatedProfile = profile
+ 	? {
+@@ -38,28 +42,52 @@ const dataAnalyticsText = profile?.data_analytics_text as {
+ 	en?: string;
+ };
+ 
+-const translatedProjects = projects?.map((project) => ({
++// Use featured if available, else fall back to all published (first N)
++const hasFeatured = (featuredProjects?.length ?? 0) > 0;
++const initialProjects = hasFeatured ? featuredProjects : (allProjects?.slice(0, 4) ?? []);
++const remainingProjects = hasFeatured
++	? allProjects?.filter(p => !featuredProjects?.find(f => f.id === p.id)) ?? []
++	: allProjects?.slice(4) ?? [];
++
++const translateProject = (project: any) => ({
+ 	...project,
+ 	title: t(project.title, "en"),
+ 	summary: t(project.summary, "en"),
+ 	problem: t(project.problem, "en"),
+ 	architecture: t(project.architecture, "en"),
+ 	outcome: t(project.outcome, "en"),
+-}));
++});
++
++const translatedInitialProjects = initialProjects.map(translateProject);
++const translatedRemainingProjects = remainingProjects.map(translateProject);
+ 
+ const translatedCertifications = certifications?.map((cert) => ({
+ 	...cert,
+ 	title: t(cert.title, "en"),
+ }));
+ 
++// Education grouped by category
++const educationCategories = ['university', 'technical', 'certification', 'complementary'] as const;
++type EduCat = typeof educationCategories[number];
++const groupedEducation = educationCategories.reduce((acc, cat) => {
++	acc[cat] = (educationEntries ?? []).filter((e: any) => e.category === cat).map((e: any) => ({
++		...e,
++		title: t(e.title, 'en'),
++		institution: t(e.institution, 'en'),
++		description: e.description ? t(e.description, 'en') : null,
++	}));
++	return acc;
++}, {} as Record<EduCat, any[]>);
++const hasEducation = Object.values(groupedEducation).some(g => g.length > 0);
++
+ const uiDictionary = {
+ 	projects: "View Projects",
+-	github: "View GitHub",
++	github: "GitHub",
+ 	resume: "Download CV",
+ 	problem: "Problem",
+ 	architecture: "Architecture",
+ 	outcome: "Outcome",
+-	privateRepo: "Private",
++	privateRepo: "Private repository",
+ 	certificationsTitle: "Certifications",
+ 	stackTitle: "Tech Stack",
+ 	architectureTitle: "System Architecture",
+@@ -72,6 +100,14 @@ const uiDictionary = {
+ 	contactSubmit: "Send Message",
+ 	contactSuccess: "Message sent successfully! I'll get back to you soon.",
+ 	contactError: "There was an error sending the message. Please try again.",
++	showMore: "Show all projects",
++	educationTitle: "Education",
++	educationCategories: {
++		university: "University",
++		technical: "Technical Training",
++		certification: "Certifications & Courses",
++		complementary: "Complementary",
++	} as Record<string, string>,
+ };
+ ---
+ 
+@@ -114,15 +150,48 @@ const uiDictionary = {
+ 						{uiDictionary.projects}
+ 					</h2>
+ 				</div>
+-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
++
++				<!-- Initial (featured) projects -->
++				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="projects-initial">
+ 					{
+-						translatedProjects?.map((project) => (
++						translatedInitialProjects.map((project) => (
+ 							<ProjectCard project={project} t={uiDictionary} />
+ 						))
+ 					}
+ 				</div>
++
++				<!-- Remaining projects (hidden until "show more") -->
++				{translatedRemainingProjects.length > 0 && (
++					<>
++						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden" id="projects-more">
++							{translatedRemainingProjects.map((project) => (
++								<ProjectCard project={project} t={uiDictionary} />
++							))}
++						</div>
++						<div class="flex justify-center">
++							<button
++								id="show-more-btn"
++								class="font-mono text-xs tracking-widest px-8 py-3 transition-all duration-200"
++								style="border: 1px solid var(--border-default); color: var(--text-secondary); background: transparent;"
++							>
++								{uiDictionary.showMore} ({translatedRemainingProjects.length})
++							</button>
++						</div>
++					</>
++				)}
+ 			</section>
+ 
++			<script>
++				const btn = document.getElementById('show-more-btn');
++				const more = document.getElementById('projects-more');
++				if (btn && more) {
++					btn.addEventListener('click', () => {
++						more.classList.remove('hidden');
++						btn.parentElement?.remove();
++					});
++				}
++			</script>
++
+ 			{
+ 				translatedCertifications && translatedCertifications.length > 0 && (
+ 					<section
+@@ -195,7 +264,7 @@ const uiDictionary = {
+ 								class="font-mono text-xs tracking-widest"
+ 								style="color: var(--text-muted);"
+ 							>
+-								005 — architecture
++								006 — architecture
+ 							</p>
+ 							<h2
+ 								class="text-3xl md:text-4xl font-black tracking-tight"
+@@ -244,7 +313,7 @@ const uiDictionary = {
+ 								class="font-mono text-xs tracking-widest"
+ 								style="color: var(--text-muted);"
+ 							>
+-								006 — data & analytics
++								007 — data & analytics
+ 							</p>
+ 							<h2
+ 								class="text-3xl md:text-4xl font-black tracking-tight"

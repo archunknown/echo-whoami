@@ -1,0 +1,50 @@
+diff a/src/services/api.ts b/src/services/api.ts	(rejected hunks)
+@@ -279,6 +327,48 @@ export async function uploadImage(file: File, bucket: string, path: string) {
+     return publicUrl;
+ }
+ 
++// Education
++type EducationInsert = Database['public']['Tables']['education']['Insert'];
++type EducationUpdate = Database['public']['Tables']['education']['Update'];
++
++export async function getPublishedEducation() {
++    const { data, error } = await supabase
++        .from('education')
++        .select('*')
++        .eq('is_published', true)
++        .order('order_index', { ascending: true });
++
++    if (error) { console.error('Error fetching education:', error); throw error; }
++    return data;
++}
++
++export async function getAllEducation() {
++    const { data, error } = await supabase
++        .from('education')
++        .select('*')
++        .order('order_index', { ascending: true });
++
++    if (error) { console.error('Error fetching all education:', error); throw error; }
++    return data;
++}
++
++export async function createEducation(entry: EducationInsert) {
++    const { data, error } = await supabase.from('education').insert(entry).select().single();
++    if (error) { console.error('Error creating education:', error); throw error; }
++    return data;
++}
++
++export async function updateEducation(id: string, updates: EducationUpdate) {
++    const { data, error } = await supabase.from('education').update(updates).eq('id', id).select().single();
++    if (error) { console.error('Error updating education:', error); throw error; }
++    return data;
++}
++
++export async function deleteEducation(id: string) {
++    const { error } = await supabase.from('education').delete().eq('id', id);
++    if (error) { console.error('Error deleting education:', error); throw error; }
++}
++
+ export async function submitContactMessage(message: ContactMessageInsert) {
+     const { data, error } = await supabase
+         .from('contact_messages')

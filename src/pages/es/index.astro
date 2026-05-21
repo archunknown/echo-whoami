@@ -17,9 +17,9 @@ import { t } from "../../utils/i18n";
 import { marked } from "marked";
 
 const profile = await getProfile();
-const projects = await getPublishedProjects();
-const certifications = await getPublishedCertifications();
-const technologies = await getAllTechnologies();
+const projects = await getPublishedProjects().catch(() => []);
+const certifications = await getPublishedCertifications().catch(() => []);
+const technologies = await getAllTechnologies().catch(() => []);
 
 const architectureText = profile?.architecture_text as {
     es?: string;
