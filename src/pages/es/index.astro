@@ -70,6 +70,17 @@ const translatedEducation = (educationEntries ?? []).map((e: any) => ({
 }));
 const hasEducation = translatedEducation.length > 0;
 
+// Numeración dinámica — solo las secciones visibles reciben número
+const showCerts = (translatedCertifications?.length ?? 0) > 0;
+const showStack = (technologies?.length ?? 0) > 0;
+let _sn = 0;
+const sn = (visible = true) => visible ? String(++_sn).padStart(3, '0') : '';
+const numWork      = sn();
+const numCerts     = sn(showCerts);
+const numStack     = sn(showStack);
+const numEducation = sn(hasEducation);
+const numContact   = sn();
+
 const uiDictionary = {
     projects: "Ver proyectos",
     github: "Ver GitHub",
@@ -107,6 +118,8 @@ const uiDictionary = {
                         bio={translatedProfile.bio}
                         resumeUrl={translatedProfile.resume_url || "#"}
                         githubUrl={translatedProfile.github_url || "#"}
+                        linkedinUrl={(profile as any)?.linkedin_url || undefined}
+                        twitterUrl={(profile as any)?.twitter_url || undefined}
                         avatarUrl={profile?.avatar_url || undefined}
                         displayName={profile?.display_name || undefined}
                         t={uiDictionary}
@@ -123,7 +136,7 @@ const uiDictionary = {
                         class="font-mono text-xs tracking-widest"
                         style="color: var(--text-muted);"
                     >
-                        001 — trabajo
+                        {numWork} — trabajo
                     </p>
                     <h2
                         class="text-3xl md:text-4xl font-black tracking-tight"
@@ -186,7 +199,7 @@ const uiDictionary = {
                                 class="font-mono text-xs tracking-widest"
                                 style="color: var(--text-muted);"
                             >
-                                002 — certificaciones
+                                {numCerts} — certificaciones
                             </p>
                             <h2
                                 class="text-3xl md:text-4xl font-black tracking-tight"
@@ -220,7 +233,7 @@ const uiDictionary = {
                                 class="font-mono text-xs tracking-widest"
                                 style="color: var(--text-muted);"
                             >
-                                003 — stack
+                                {numStack} — stack
                             </p>
                             <h2
                                 class="text-3xl md:text-4xl font-black tracking-tight"
@@ -243,7 +256,7 @@ const uiDictionary = {
                     >
                         <div class="flex flex-col gap-2 mb-12">
                             <p class="font-mono text-xs tracking-widest" style="color: var(--text-muted);">
-                                004 — educación
+                                {numEducation} — educación
                             </p>
                             <h2 class="text-3xl md:text-4xl font-black tracking-tight" style="color: var(--text-primary);">
                                 {uiDictionary.educationTitle}
@@ -292,6 +305,7 @@ const uiDictionary = {
                 style="border-top: 1px solid var(--border-subtle);"
             >
                 <ContactForm
+                    sectionLabel={`${numContact} — contacto`}
                     t={{
                         title: uiDictionary.contactTitle,
                         nameLabel: uiDictionary.contactName,

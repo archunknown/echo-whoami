@@ -1,5 +1,5 @@
 ---
-const { t } = Astro.props;
+const { t, sectionLabel } = Astro.props;
 ---
 
 <div class="w-full max-w-xl reveal-hidden">
@@ -14,12 +14,14 @@ const { t } = Astro.props;
 
     <form id="contact-form" class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
-            <p
-                class="font-mono text-xs tracking-widest mb-6"
-                style="color: var(--text-muted);"
-            >
-                004 — contact
-            </p>
+            {sectionLabel && (
+                <p
+                    class="font-mono text-xs tracking-widest mb-6"
+                    style="color: var(--text-muted);"
+                >
+                    {sectionLabel}
+                </p>
+            )}
             <h2
                 class="text-3xl md:text-4xl font-black tracking-tight"
                 style="color: var(--text-primary);"
