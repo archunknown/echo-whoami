@@ -3,8 +3,21 @@ import { getAllTechnologies, createTechnology, updateTechnology, deleteTechnolog
 
 const CATEGORIES = ['Frontend', 'Backend', 'Database', 'DevOps/Tools', 'OS', 'Other'];
 
-const deriveSlug = (name: string) =>
+const DEVICONS_BASE = 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons';
+const buildDeviconsUrl = (slug: string) => `${DEVICONS_BASE}/${slug}/${slug}-original.svg`;
+const isDeviconsUrl = (url: string) => url.includes('cdn.jsdelivr.net/gh/devicons/devicon');
+
+const deriveSimpleSlug = (name: string) =>
     name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+
+const deriveDeviconsSlug = (name: string) =>
+    name.toLowerCase()
+        .replace(/\+\+/g, 'plusplus')
+        .replace(/\./g, '')
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9]/g, '');
+
+type IconSource = 'simpleicons' | 'devicons' | 'custom';
 
 const inputStyle = {
     width: '100%',
@@ -36,9 +49,11 @@ export default function TechnologyManager() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
     const [category, setCategory] = useState(CATEGORIES[0]);
-    const [iconSlug, setIconSlug] = useState('');
-    const [logoUrl, setLogoUrl] = useState('');
     const [color, setColor] = useState('#888888');
+    const [iconSource, setIconSource] = useState<IconSource>('simpleicons');
+    const [simpleSlug, setSimpleSlug] = useState('');
+    const [devSlug, setDevSlug] = useState('');
+    const [customUrl, setCustomUrl] = useState('');
 
     useEffect(() => { load(); }, []);
 
@@ -55,21 +70,48 @@ export default function TechnologyManager() {
         }
     };
 
-    const openNew = () => {
+    const resetForm = () => {
         setEditingId(null);
-        setName(''); setCategory(CATEGORIES[0]);
-        setIconSlug(''); setLogoUrl(''); setColor('#888888');
-        setIsFormOpen(true);
+        setName(''); setCategory(CATEGORIES[0]); setColor('#888888');
+        setIconSource('simpleicons');
+        setSimpleSlug(''); setDevSlug(''); setCustomUrl('');
     };
+
+    const openNew = () => { resetForm(); setIsFormOpen(true); };
 
     const openEdit = (tech: any) => {
         setEditingId(tech.id);
         setName(tech.name);
         setCategory(tech.category || CATEGORIES[0]);
-        setIconSlug(tech.icon_slug || '');
-        setLogoUrl(tech.logo_url || '');
         setColor(tech.color || '#888888');
+
+        if (tech.logo_url) {
+            if (isDeviconsUrl(tech.logo_url)) {
+                const match = tech.logo_url.match(/icons\/([^/]+)\//);
+                setDevSlug(match ? match[1] : deriveDeviconsSlug(tech.name));
+                setSimpleSlug(tech.icon_slug || deriveSimpleSlug(tech.name));
+                setCustomUrl('');
+                setIconSource('devicons');
+            } else {
+                setCustomUrl(tech.logo_url);
+                setSimpleSlug(tech.icon_slug || deriveSimpleSlug(tech.name));
+                setDevSlug(deriveDeviconsSlug(tech.name));
+                setIconSource('custom');
+            }
+        } else {
+            setSimpleSlug(tech.icon_slug || '');
+            setDevSlug(deriveDeviconsSlug(tech.name));
+            setCustomUrl('');
+            setIconSource('simpleicons');
+        }
+
         setIsFormOpen(true);
+    };
+
+    const handleNameChange = (v: string) => {
+        if (!simpleSlug || simpleSlug === deriveSimpleSlug(name)) setSimpleSlug(deriveSimpleSlug(v));
+        if (!devSlug || devSlug === deriveDeviconsSlug(name)) setDevSlug(deriveDeviconsSlug(v));
+        setName(v);
     };
 
     const handleDelete = async (id: string, techName: string) => {
@@ -91,9 +133,13 @@ export default function TechnologyManager() {
             const techData: any = {
                 name: name.trim(),
                 category,
-                icon_slug: iconSlug.trim() || null,
-                logo_url: logoUrl.trim() || null,
                 color: color || null,
+                icon_slug: iconSource === 'simpleicons' ? (simpleSlug.trim() || null) : null,
+                logo_url: iconSource === 'devicons'
+                    ? (devSlug.trim() ? buildDeviconsUrl(devSlug.trim()) : null)
+                    : iconSource === 'custom'
+                    ? (customUrl.trim() || null)
+                    : null,
             };
             if (editingId) {
                 await updateTechnology(editingId, techData);
@@ -109,6 +155,18 @@ export default function TechnologyManager() {
         }
     };
 
+    const previewSrc = (() => {
+        if (iconSource === 'simpleicons') {
+            const slug = simpleSlug || deriveSimpleSlug(name);
+            return slug ? `https://cdn.simpleicons.org/${slug}/${color.replace('#', '')}` : null;
+        }
+        if (iconSource === 'devicons') {
+            const slug = devSlug || deriveDeviconsSlug(name);
+            return slug ? buildDeviconsUrl(slug) : null;
+        }
+        return customUrl || null;
+    })();
+
     const techByCategory = technologies.reduce((acc: Record<string, any[]>, tech) => {
         const cat = tech.category || 'Other';
         acc[cat] = acc[cat] || [];
@@ -119,6 +177,19 @@ export default function TechnologyManager() {
     if (isLoading && technologies.length === 0) {
         return <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading...</div>;
     }
+
+    const sourceTabStyle = (src: IconSource): React.CSSProperties => ({
+        padding: '0.35rem 0.85rem',
+        fontFamily: 'monospace',
+        fontSize: '0.65rem',
+        letterSpacing: '0.08em',
+        cursor: 'pointer',
+        border: '1px solid var(--border-default)',
+        borderRadius: '2px',
+        background: iconSource === src ? 'var(--text-primary)' : 'transparent',
+        color: iconSource === src ? 'var(--bg-primary)' : 'var(--text-secondary)',
+        transition: 'all 0.15s',
+    });
 
     if (isFormOpen) {
         return (
@@ -131,6 +202,7 @@ export default function TechnologyManager() {
                 {error && <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#1a0000', border: '1px solid #8b0000', color: '#c0392b', fontFamily: 'monospace', fontSize: '0.75rem', borderRadius: '2px' }}>{error}</div>}
 
                 <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {/* Name + Category */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label style={labelStyle}>Name *</label>
@@ -138,11 +210,7 @@ export default function TechnologyManager() {
                                 type="text"
                                 required
                                 value={name}
-                                onChange={e => {
-                                    const v = e.target.value;
-                                    if (!iconSlug || iconSlug === deriveSlug(name)) setIconSlug(deriveSlug(v));
-                                    setName(v);
-                                }}
+                                onChange={e => handleNameChange(e.target.value)}
                                 placeholder="e.g. React"
                                 style={inputStyle}
                             />
@@ -155,34 +223,55 @@ export default function TechnologyManager() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label style={labelStyle}>SimpleIcons slug</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <input type="text" value={iconSlug} onChange={e => setIconSlug(e.target.value)} placeholder="e.g. react, nodedotjs" style={{ ...inputStyle, flex: 1 }} />
-                                <button
-                                    type="button"
-                                    onClick={() => setIconSlug(deriveSlug(name))}
-                                    title="Re-derive from name"
-                                    style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'var(--bg-primary)', border: '1px solid var(--border-default)', borderRadius: '2px', cursor: 'pointer', flexShrink: 0 }}
-                                >
-                                    ↺
-                                </button>
-                            </div>
-                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                                Auto-derived from name · override for special cases (e.g. <code>nodedotjs</code>, <code>cplusplus</code>)
-                            </p>
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Logo URL (optional — overrides icon slug)</label>
-                            <input type="url" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://cdn.../logo.svg" style={inputStyle} />
-                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Direct URL to official logo image (SVG preferred)</p>
+                    {/* Icon source selector */}
+                    <div>
+                        <label style={{ ...labelStyle, marginBottom: '0.6rem' }}>Icon source</label>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <button type="button" style={sourceTabStyle('simpleicons')} onClick={() => setIconSource('simpleicons')}>Simple Icons</button>
+                            <button type="button" style={sourceTabStyle('devicons')} onClick={() => setIconSource('devicons')}>Devicons</button>
+                            <button type="button" style={sourceTabStyle('custom')} onClick={() => setIconSource('custom')}>Custom URL</button>
                         </div>
                     </div>
 
+                    {/* Source-specific input */}
+                    {iconSource === 'simpleicons' && (
+                        <div>
+                            <label style={labelStyle}>Simple Icons slug</label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="text" value={simpleSlug} onChange={e => setSimpleSlug(e.target.value)} placeholder="e.g. react, nodedotjs, cplusplus" style={{ ...inputStyle, flex: 1 }} />
+                                <button type="button" onClick={() => setSimpleSlug(deriveSimpleSlug(name))} title="Re-derive from name" style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'var(--bg-primary)', border: '1px solid var(--border-default)', borderRadius: '2px', cursor: 'pointer', flexShrink: 0 }}>↺</button>
+                            </div>
+                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                ~3,000 brand logos · special cases: <code>nodedotjs</code>, <code>cplusplus</code> · <a href="https://simpleicons.org" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)' }}>browse →</a>
+                            </p>
+                        </div>
+                    )}
+
+                    {iconSource === 'devicons' && (
+                        <div>
+                            <label style={labelStyle}>Devicons slug</label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="text" value={devSlug} onChange={e => setDevSlug(e.target.value)} placeholder="e.g. react, nodejs, kubernetes" style={{ ...inputStyle, flex: 1 }} />
+                                <button type="button" onClick={() => setDevSlug(deriveDeviconsSlug(name))} title="Re-derive from name" style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'var(--bg-primary)', border: '1px solid var(--border-default)', borderRadius: '2px', cursor: 'pointer', flexShrink: 0 }}>↺</button>
+                            </div>
+                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                ~400+ dev tools, colored icons · <a href="https://devicon.dev" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)' }}>browse →</a>
+                            </p>
+                        </div>
+                    )}
+
+                    {iconSource === 'custom' && (
+                        <div>
+                            <label style={labelStyle}>Custom logo URL</label>
+                            <input type="url" value={customUrl} onChange={e => setCustomUrl(e.target.value)} placeholder="https://example.com/logo.svg" style={inputStyle} />
+                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Direct link to any image — SVG preferred</p>
+                        </div>
+                    )}
+
+                    {/* Brand color (only relevant for Simple Icons) */}
                     <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '0.75rem', alignItems: 'end' }}>
                         <div>
-                            <label style={labelStyle}>Brand color</label>
+                            <label style={labelStyle}>Brand color{iconSource !== 'simpleicons' && <span style={{ opacity: 0.5 }}> (badge only)</span>}</label>
                             <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ ...inputStyle, padding: '0.2rem', height: '2.4rem', cursor: 'pointer' }} />
                         </div>
                         <div>
@@ -192,22 +281,20 @@ export default function TechnologyManager() {
                     </div>
 
                     {/* Preview */}
-                    {(name || iconSlug || logoUrl) && (
+                    {(name || previewSrc) && (
                         <div style={{ padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '2px' }}>
                             <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>preview</p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                {logoUrl ? (
-                                    <img src={logoUrl} alt={name} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                                ) : (
+                                {previewSrc && (
                                     <img
-                                        src={`https://cdn.simpleicons.org/${iconSlug || deriveSlug(name)}/${color.replace('#', '')}`}
+                                        src={previewSrc}
                                         alt={name}
                                         style={{ width: '24px', height: '24px', objectFit: 'contain' }}
                                         onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                     />
                                 )}
                                 <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{name || 'Technology name'}</span>
-                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, border: '1px solid var(--border-default)' }} />
+                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, border: '1px solid var(--border-default)', flexShrink: 0 }} />
                             </div>
                         </div>
                     )}
@@ -248,24 +335,33 @@ export default function TechnologyManager() {
                             <div key={cat}>
                                 <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-subtle)' }}>{cat}</p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {group.map((tech: any) => (
-                                        <div key={tech.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '2px' }} className="group">
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                                {tech.logo_url ? (
-                                                    <img src={tech.logo_url} alt={tech.name} style={{ width: '18px', height: '18px', objectFit: 'contain', filter: 'brightness(0.9)' }} />
-                                                ) : tech.icon_slug ? (
-                                                    <img src={`https://cdn.simpleicons.org/${tech.icon_slug}/${(tech.color || '888888').replace('#', '')}`} alt={tech.name} style={{ width: '18px', height: '18px', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                ) : (
-                                                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: tech.color || '#888', flexShrink: 0 }} />
-                                                )}
-                                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{tech.name}</span>
+                                    {group.map((tech: any) => {
+                                        const iconSrc = tech.logo_url
+                                            ? tech.logo_url
+                                            : tech.icon_slug
+                                            ? `https://cdn.simpleicons.org/${tech.icon_slug}/${(tech.color || '888888').replace('#', '')}`
+                                            : null;
+                                        const sourceLabel = tech.logo_url
+                                            ? (isDeviconsUrl(tech.logo_url) ? 'devicons' : 'custom')
+                                            : 'simpleicons';
+                                        return (
+                                            <div key={tech.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '2px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                                    {iconSrc ? (
+                                                        <img src={iconSrc} alt={tech.name} style={{ width: '18px', height: '18px', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                    ) : (
+                                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: tech.color || '#888', flexShrink: 0 }} />
+                                                    )}
+                                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{tech.name}</span>
+                                                    <span style={{ fontFamily: 'monospace', fontSize: '0.55rem', color: 'var(--text-muted)', opacity: 0.6 }}>{sourceLabel}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                                    <button onClick={() => openEdit(tech)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}>edit</button>
+                                                    <button onClick={() => handleDelete(tech.id, tech.name)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>del</button>
+                                                </div>
                                             </div>
-                                            <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                                <button onClick={() => openEdit(tech)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}>edit</button>
-                                                <button onClick={() => handleDelete(tech.id, tech.name)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>del</button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         );
