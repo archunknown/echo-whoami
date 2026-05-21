@@ -41,6 +41,30 @@ export async function updateProfile(id: string, updates: ProfileUpdate) {
     return data;
 }
 
+export async function getFeaturedProjects() {
+    const { data, error } = await supabase
+        .from('projects')
+        .select(`
+      *,
+      project_technologies (
+        is_primary_stack,
+        technologies (
+          *
+        )
+      )
+    `)
+        .eq('is_published', true)
+        .eq('is_featured', true)
+        .order('order_index', { ascending: true });
+
+    if (error) {
+        console.error('Error fetching featured projects:', error);
+        throw error;
+    }
+
+    return data;
+}
+
 export async function getPublishedProjects() {
     const { data, error } = await supabase
         .from('projects')
@@ -125,6 +149,30 @@ export async function deleteProject(id: string) {
 
     if (error) {
         console.error('Error deleting project:', error);
+        throw error;
+    }
+}
+
+export async function addTechnologyToProject(projectId: string, technologyId: string) {
+    const { error } = await supabase
+        .from('project_technologies')
+        .upsert({ project_id: projectId, technology_id: technologyId }, { onConflict: 'project_id,technology_id' });
+
+    if (error) {
+        console.error('Error adding technology to project:', error);
+        throw error;
+    }
+}
+
+export async function removeTechnologyFromProject(projectId: string, technologyId: string) {
+    const { error } = await supabase
+        .from('project_technologies')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('technology_id', technologyId);
+
+    if (error) {
+        console.error('Error removing technology from project:', error);
         throw error;
     }
 }
@@ -277,6 +325,48 @@ export async function uploadImage(file: File, bucket: string, path: string) {
         .getPublicUrl(data.path);
 
     return publicUrl;
+}
+
+// Education
+type EducationInsert = Database['public']['Tables']['education']['Insert'];
+type EducationUpdate = Database['public']['Tables']['education']['Update'];
+
+export async function getPublishedEducation() {
+    const { data, error } = await supabase
+        .from('education')
+        .select('*')
+        .eq('is_published', true)
+        .order('order_index', { ascending: true });
+
+    if (error) { console.error('Error fetching education:', error); throw error; }
+    return data;
+}
+
+export async function getAllEducation() {
+    const { data, error } = await supabase
+        .from('education')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+    if (error) { console.error('Error fetching all education:', error); throw error; }
+    return data;
+}
+
+export async function createEducation(entry: EducationInsert) {
+    const { data, error } = await supabase.from('education').insert(entry).select().single();
+    if (error) { console.error('Error creating education:', error); throw error; }
+    return data;
+}
+
+export async function updateEducation(id: string, updates: EducationUpdate) {
+    const { data, error } = await supabase.from('education').update(updates).eq('id', id).select().single();
+    if (error) { console.error('Error updating education:', error); throw error; }
+    return data;
+}
+
+export async function deleteEducation(id: string) {
+    const { error } = await supabase.from('education').delete().eq('id', id);
+    if (error) { console.error('Error deleting education:', error); throw error; }
 }
 
 export async function submitContactMessage(message: ContactMessageInsert) {

@@ -4,10 +4,11 @@ import type { Session } from '@supabase/supabase-js';
 import Dashboard from './Dashboard';
 import ProjectManager from './ProjectManager';
 import CertificationManager from './CertificationManager';
+import EducationManager from './EducationManager';
 import TechnologyManager from './TechnologyManager';
 import ContactManager from './ContactManager';
 
-type Tab = 'profile' | 'projects' | 'certifications' | 'stack' | 'messages';
+type Tab = 'profile' | 'projects' | 'certifications' | 'education' | 'stack' | 'messages';
 
 export default function AdminApp() {
     const [session, setSession] = useState<Session | null>(null);
@@ -53,125 +54,166 @@ export default function AdminApp() {
         await supabase.auth.signOut();
     };
 
+    const tabStyle = (tab: Tab) => ({
+        background: 'transparent',
+        border: 'none',
+        borderBottom: activeTab === tab ? '1px solid var(--color-accent)' : '1px solid transparent',
+        color: activeTab === tab ? 'var(--color-accent)' : 'var(--text-secondary)',
+        padding: '0.5rem 1rem',
+        fontFamily: 'monospace',
+        fontSize: '0.7rem',
+        letterSpacing: '0.1em',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+        whiteSpace: 'nowrap' as const,
+    });
+
     if (loading) {
-        return <div className="flex justify-center items-center min-h-[50vh]">Loading...</div>;
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                authenticating...
+            </div>
+        );
     }
 
     if (!session) {
         return (
-            <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-800">
-                <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white text-center">Admin Login</h2>
+            <div style={{ maxWidth: '400px', margin: '5rem auto', padding: '2rem', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '4px' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                    <p style={{ fontFamily: 'monospace', fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>echo-whoami — admin</p>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--text-primary)', margin: 0 }}>Sign In</h2>
+                </div>
 
                 {error && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+                    <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#1a0000', border: '1px solid #8b0000', color: '#c0392b', fontFamily: 'monospace', fontSize: '0.75rem', borderRadius: '2px' }}>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="flex flex-col gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="email">Email</label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        />
-                    </div>
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <LoginField label="email" id="email" type="email" value={email} onChange={setEmail} />
+                    <LoginField label="password" id="password" type="password" value={password} onChange={setPassword} />
                     <button
                         type="submit"
                         disabled={loading}
-                        className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors disabled:opacity-50"
+                        style={{
+                            marginTop: '0.5rem',
+                            padding: '0.75rem',
+                            background: 'var(--color-accent)',
+                            color: '#fff',
+                            border: '1px solid var(--color-accent)',
+                            fontFamily: 'monospace',
+                            fontSize: '0.7rem',
+                            letterSpacing: '0.15em',
+                            fontWeight: 700,
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            opacity: loading ? 0.5 : 1,
+                            borderRadius: '2px',
+                            transition: 'opacity 0.15s',
+                        }}
                     >
-                        {loading ? 'Signing in...' : 'Sign In'}
+                        {loading ? 'signing in...' : 'sign in →'}
                     </button>
                 </form>
             </div>
         );
     }
 
+    const TABS: { id: Tab; label: string }[] = [
+        { id: 'profile', label: 'profile' },
+        { id: 'projects', label: 'projects' },
+        { id: 'certifications', label: 'certifications' },
+        { id: 'education', label: 'education' },
+        { id: 'stack', label: 'stack' },
+        { id: 'messages', label: 'messages' },
+    ];
+
     return (
-        <div className="max-w-5xl mx-auto w-full">
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 mb-6 gap-4">
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
+            {/* Top bar */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1rem 1.5rem',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '4px',
+                marginBottom: '0',
+                gap: '1rem',
+                flexWrap: 'wrap',
+            }}>
                 <div>
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white">Admin Dashboard</h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Logged in as {session.user.email}</p>
+                    <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>echo-whoami — admin</p>
+                    <p style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{session.user.email}</p>
                 </div>
-
-                <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                    <button
-                        onClick={() => setActiveTab('profile')}
-                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'profile'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                    >
-                        Profile View
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('projects')}
-                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'projects'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                    >
-                        Projects Manager
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('certifications')}
-                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'certifications'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                    >
-                        Certifications
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('stack')}
-                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'stack'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                    >
-                        Stack Tech
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('messages')}
-                        className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'messages'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                    >
-                        Messages
-                    </button>
-                </div>
-
                 <button
                     onClick={handleLogout}
-                    className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 font-bold py-2 px-6 rounded-lg transition-colors border border-red-200 dark:border-red-800"
+                    style={{
+                        background: 'transparent',
+                        border: '1px solid var(--border-default)',
+                        color: 'var(--text-secondary)',
+                        fontFamily: 'monospace',
+                        fontSize: '0.7rem',
+                        letterSpacing: '0.1em',
+                        padding: '0.4rem 1rem',
+                        cursor: 'pointer',
+                        borderRadius: '2px',
+                        transition: 'all 0.15s',
+                    }}
                 >
-                    Sign Out
+                    sign out
                 </button>
+            </div>
+
+            {/* Tab nav */}
+            <div style={{
+                display: 'flex',
+                gap: 0,
+                background: 'var(--bg-secondary)',
+                borderLeft: '1px solid var(--border-subtle)',
+                borderRight: '1px solid var(--border-subtle)',
+                borderBottom: '1px solid var(--border-subtle)',
+                overflowX: 'auto',
+            }}>
+                {TABS.map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={tabStyle(tab)}>
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {activeTab === 'profile' && <Dashboard />}
             {activeTab === 'projects' && <ProjectManager />}
             {activeTab === 'certifications' && <CertificationManager />}
+            {activeTab === 'education' && <EducationManager />}
             {activeTab === 'stack' && <TechnologyManager />}
             {activeTab === 'messages' && <ContactManager />}
+        </div>
+    );
+}
+
+function LoginField({ label, id, type, value, onChange }: { label: string; id: string; type: string; value: string; onChange: (v: string) => void }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            <label htmlFor={id} style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>{label}</label>
+            <input
+                id={id}
+                type={type}
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                required
+                style={{
+                    padding: '0.6rem 0.75rem',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-default)',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'monospace',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    borderRadius: '2px',
+                }}
+            />
         </div>
     );
 }
