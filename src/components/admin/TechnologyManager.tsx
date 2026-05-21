@@ -3,6 +3,9 @@ import { getAllTechnologies, createTechnology, updateTechnology, deleteTechnolog
 
 const CATEGORIES = ['Frontend', 'Backend', 'Database', 'DevOps/Tools', 'OS', 'Other'];
 
+const deriveSlug = (name: string) =>
+    name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+
 const inputStyle = {
     width: '100%',
     padding: '0.5rem 0.75rem',
@@ -131,7 +134,18 @@ export default function TechnologyManager() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label style={labelStyle}>Name *</label>
-                            <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. React" style={inputStyle} />
+                            <input
+                                type="text"
+                                required
+                                value={name}
+                                onChange={e => {
+                                    const v = e.target.value;
+                                    if (!iconSlug || iconSlug === deriveSlug(name)) setIconSlug(deriveSlug(v));
+                                    setName(v);
+                                }}
+                                placeholder="e.g. React"
+                                style={inputStyle}
+                            />
                         </div>
                         <div>
                             <label style={labelStyle}>Category</label>
@@ -143,9 +157,21 @@ export default function TechnologyManager() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label style={labelStyle}>SimpleIcons slug (optional)</label>
-                            <input type="text" value={iconSlug} onChange={e => setIconSlug(e.target.value)} placeholder="e.g. react, nodedotjs" style={inputStyle} />
-                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Used for automatic icon rendering via simpleicons.org</p>
+                            <label style={labelStyle}>SimpleIcons slug</label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="text" value={iconSlug} onChange={e => setIconSlug(e.target.value)} placeholder="e.g. react, nodedotjs" style={{ ...inputStyle, flex: 1 }} />
+                                <button
+                                    type="button"
+                                    onClick={() => setIconSlug(deriveSlug(name))}
+                                    title="Re-derive from name"
+                                    style={{ padding: '0.4rem 0.6rem', fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'var(--bg-primary)', border: '1px solid var(--border-default)', borderRadius: '2px', cursor: 'pointer', flexShrink: 0 }}
+                                >
+                                    ↺
+                                </button>
+                            </div>
+                            <p style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                Auto-derived from name · override for special cases (e.g. <code>nodedotjs</code>, <code>cplusplus</code>)
+                            </p>
                         </div>
                         <div>
                             <label style={labelStyle}>Logo URL (optional — overrides icon slug)</label>
@@ -166,15 +192,20 @@ export default function TechnologyManager() {
                     </div>
 
                     {/* Preview */}
-                    {(iconSlug || logoUrl) && (
+                    {(name || iconSlug || logoUrl) && (
                         <div style={{ padding: '1rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '2px' }}>
                             <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>preview</p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                 {logoUrl ? (
                                     <img src={logoUrl} alt={name} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                                ) : iconSlug ? (
-                                    <img src={`https://cdn.simpleicons.org/${iconSlug}/${color.replace('#', '')}`} alt={name} style={{ width: '24px', height: '24px', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                ) : null}
+                                ) : (
+                                    <img
+                                        src={`https://cdn.simpleicons.org/${iconSlug || deriveSlug(name)}/${color.replace('#', '')}`}
+                                        alt={name}
+                                        style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                )}
                                 <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{name || 'Technology name'}</span>
                                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, border: '1px solid var(--border-default)' }} />
                             </div>

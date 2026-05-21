@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     getAllProjects,
     createProject,
@@ -39,11 +39,15 @@ export default function ProjectManager() {
     const [isFeatured, setIsFeatured] = useState(false);
     const [isPrivate, setIsPrivate] = useState(false);
     const [isPublished, setIsPublished] = useState(false);
-    const [orderIndex, setOrderIndex] = useState(0);
     const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
     const [coverImageUrl, setCoverImageUrl] = useState('');
     const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
     const [metricsRaw, setMetricsRaw] = useState('');
+
+    // Drag state
+    const draggingId = useRef<string | null>(null);
+    const [dragOverId, setDragOverId] = useState<string | null>(null);
+    const [isSavingOrder, setIsSavingOrder] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -57,7 +61,8 @@ export default function ProjectManager() {
                 getAllProjects(),
                 getAllTechnologies(),
             ]);
-            setProjects(projectsData || []);
+            const sorted = (projectsData || []).slice().sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0));
+            setProjects(sorted);
             setAllTechs(techsData || []);
         } catch (err: any) {
             setError('Failed to load data.');
@@ -79,7 +84,6 @@ export default function ProjectManager() {
         setIsFeatured(false);
         setIsPrivate(false);
         setIsPublished(false);
-        setOrderIndex(projects.length);
         setCoverImageFile(null);
         setCoverImageUrl('');
         setSelectedTechIds([]);
@@ -118,7 +122,6 @@ export default function ProjectManager() {
         setIsFeatured(project.is_featured || false);
         setIsPrivate(project.is_private || false);
         setIsPublished(project.is_published || false);
-        setOrderIndex(project.order_index ?? 0);
         setCoverImageUrl(project.cover_image_url || '');
         setCoverImageFile(null);
 
@@ -180,7 +183,9 @@ export default function ProjectManager() {
                 is_featured: isFeatured,
                 is_private: isPrivate,
                 is_published: isPublished,
-                order_index: orderIndex,
+                order_index: editingId
+                    ? (projects.find(p => p.id === editingId)?.order_index ?? projects.length)
+                    : projects.length,
                 metrics: parsedMetrics,
             };
 
@@ -225,6 +230,47 @@ export default function ProjectManager() {
         );
     };
 
+    const handleDragStart = (id: string) => { draggingId.current = id; };
+
+    const handleDragOver = (e: React.DragEvent, id: string) => {
+        e.preventDefault();
+        if (draggingId.current !== id) setDragOverId(id);
+    };
+
+    const handleDrop = async (e: React.DragEvent, targetId: string) => {
+        e.preventDefault();
+        setDragOverId(null);
+        const fromId = draggingId.current;
+        draggingId.current = null;
+        if (!fromId || fromId === targetId) return;
+
+        const fromIdx = projects.findIndex(p => p.id === fromId);
+        const toIdx = projects.findIndex(p => p.id === targetId);
+        if (fromIdx === -1 || toIdx === -1) return;
+
+        const reordered = [...projects];
+        const [moved] = reordered.splice(fromIdx, 1);
+        reordered.splice(toIdx, 0, moved);
+
+        const withNewIndex = reordered.map((p, i) => ({ ...p, order_index: i }));
+        const oldIndexMap = Object.fromEntries(projects.map(p => [p.id, p.order_index ?? 0]));
+        const changed = withNewIndex.filter(p => p.order_index !== oldIndexMap[p.id]);
+
+        setProjects(withNewIndex);
+        if (changed.length === 0) return;
+        setIsSavingOrder(true);
+        try {
+            await Promise.all(changed.map(p => updateProject(p.id, { order_index: p.order_index })));
+        } catch {
+            setError('Failed to save order. Refreshing...');
+            await loadData();
+        } finally {
+            setIsSavingOrder(false);
+        }
+    };
+
+    const handleDragEnd = () => { draggingId.current = null; setDragOverId(null); };
+
     const techsByCategory = allTechs.reduce((acc: Record<string, any[]>, t) => {
         acc[t.category] = acc[t.category] || [];
         acc[t.category].push(t);
@@ -260,7 +306,6 @@ export default function ProjectManager() {
                         <legend className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>01 — identity</legend>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <AdminInput label="Slug *" value={slug} onChange={setSlug} placeholder="my-project" />
-                            <AdminInput label="Order Index" type="number" value={String(orderIndex)} onChange={v => setOrderIndex(parseInt(v) || 0)} />
                             <div className="flex flex-col gap-3 pt-6">
                                 <AdminToggle label="Published" checked={isPublished} onChange={setIsPublished} />
                                 <AdminToggle label="Featured" checked={isFeatured} onChange={setIsFeatured} />
@@ -419,7 +464,10 @@ export default function ProjectManager() {
             <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 <div>
                     <h3 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Projects</h3>
-                    <p className="font-mono text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{projects.length} total</p>
+                    <p className="font-mono text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                        {projects.length} total · drag to reorder
+                        {isSavingOrder && ' · saving order...'}
+                    </p>
                 </div>
                 <button
                     onClick={handleOpenNew}
@@ -437,45 +485,48 @@ export default function ProjectManager() {
             )}
 
             {projects.length === 0 ? (
-                <div className="p-8 text-center font-mono text-sm" style={{ color: 'var(--text-muted)' }}>No projects found.</div>
+                <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>No projects yet.</div>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                            <tr>
-                                {['Title (EN)', 'Slug', 'Order', 'Status', 'Flags', 'Actions'].map(h => (
-                                    <th key={h} className="px-6 py-3 font-mono text-xs tracking-widest" style={{ color: 'var(--text-muted)' }}>{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {projects.map(project => {
-                                const title = (project.title as { en?: string })?.en || 'Untitled';
-                                return (
-                                    <tr key={project.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                                        <td className="px-6 py-4 font-medium" style={{ color: 'var(--text-primary)' }}>{title}</td>
-                                        <td className="px-6 py-4 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{project.slug}</td>
-                                        <td className="px-6 py-4 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{project.order_index}</td>
-                                        <td className="px-6 py-4">
-                                            <StatusBadge active={project.is_published} label={project.is_published ? 'published' : 'draft'} />
-                                        </td>
-                                        <td className="px-6 py-4 font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
-                                            {project.is_featured ? '⭐ featured · ' : ''}
-                                            {project.is_private ? '🔒 private' : ''}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button onClick={() => handleEdit(project)} className="font-mono text-xs tracking-widest mr-4 transition-colors hover:opacity-80" style={{ color: 'var(--color-accent)' }}>
-                                                edit
-                                            </button>
-                                            <button onClick={() => handleDelete(project.id, title)} className="font-mono text-xs tracking-widest transition-colors" style={{ color: 'var(--text-secondary)' }}>
-                                                delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                <div>
+                    {projects.map(project => {
+                        const title = (project.title as { en?: string })?.en || 'Untitled';
+                        const isDragTarget = dragOverId === project.id;
+                        return (
+                            <div
+                                key={project.id}
+                                draggable
+                                onDragStart={() => handleDragStart(project.id)}
+                                onDragOver={e => handleDragOver(e, project.id)}
+                                onDrop={e => handleDrop(e, project.id)}
+                                onDragEnd={handleDragEnd}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '0.875rem 1.5rem',
+                                    borderBottom: '1px solid var(--border-subtle)',
+                                    gap: '0.75rem',
+                                    borderTop: isDragTarget ? '2px solid var(--color-accent)' : '2px solid transparent',
+                                    transition: 'border-top 0.1s',
+                                    cursor: 'default',
+                                }}
+                            >
+                                <span style={{ fontSize: '1rem', color: 'var(--text-muted)', cursor: 'grab', userSelect: 'none', flexShrink: 0, lineHeight: 1 }} title="Drag to reorder">⠿</span>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</p>
+                                    <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0' }}>{project.slug}</p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    {project.is_featured && <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--color-accent)', border: '1px solid var(--color-accent)', padding: '0.1rem 0.4rem', borderRadius: '2px' }}>featured</span>}
+                                    {project.is_private && <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', padding: '0.1rem 0.4rem', borderRadius: '2px' }}>private</span>}
+                                    <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: project.is_published ? 'var(--color-accent)' : 'var(--text-muted)', border: `1px solid ${project.is_published ? 'var(--color-accent)' : 'var(--border-subtle)'}`, padding: '0.1rem 0.4rem', borderRadius: '2px' }}>
+                                        {project.is_published ? 'published' : 'draft'}
+                                    </span>
+                                    <button onClick={() => handleEdit(project)} style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem 0.25rem' }}>edit</button>
+                                    <button onClick={() => handleDelete(project.id, title)} style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem 0.25rem' }}>delete</button>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -546,20 +597,5 @@ function AdminToggle({ label, checked, onChange }: { label: string; checked: boo
             </div>
             <span className="font-mono text-xs tracking-widest" style={{ color: 'var(--text-secondary)' }}>{label}</span>
         </label>
-    );
-}
-
-function StatusBadge({ active, label }: { active: boolean; label: string }) {
-    return (
-        <span
-            className="inline-block font-mono text-xs px-2 py-0.5"
-            style={{
-                border: `1px solid ${active ? 'var(--color-accent)' : 'var(--border-default)'}`,
-                color: active ? 'var(--color-accent)' : 'var(--text-muted)',
-                borderRadius: '2px',
-            }}
-        >
-            {label}
-        </span>
     );
 }
