@@ -56,19 +56,19 @@ const translatedCertifications = certifications?.map((cert) => ({
 	title: t(cert.title, "en"),
 }));
 
-// Education grouped by category
-const educationCategories = ['university', 'technical', 'certification', 'complementary'] as const;
-type EduCat = typeof educationCategories[number];
-const groupedEducation = educationCategories.reduce((acc, cat) => {
-	acc[cat] = (educationEntries ?? []).filter((e: any) => e.category === cat).map((e: any) => ({
-		...e,
-		title: t(e.title, 'en'),
-		institution: t(e.institution, 'en'),
-		description: e.description ? t(e.description, 'en') : null,
-	}));
-	return acc;
-}, {} as Record<EduCat, any[]>);
-const hasEducation = Object.values(groupedEducation).some(g => g.length > 0);
+const EDUCATION_CATEGORY_LABELS: Record<string, string> = {
+	university: 'University',
+	technical: 'Technical',
+	certification: 'Certification',
+	complementary: 'Complementary',
+};
+const translatedEducation = (educationEntries ?? []).map((e: any) => ({
+	...e,
+	title: t(e.title, 'en'),
+	institution: t(e.institution, 'en'),
+	description: e.description ? t(e.description, 'en') : null,
+}));
+const hasEducation = translatedEducation.length > 0;
 
 const uiDictionary = {
 	projects: "View Projects",
@@ -90,12 +90,6 @@ const uiDictionary = {
 	contactError: "There was an error sending the message. Please try again.",
 	showMore: "Show all projects",
 	educationTitle: "Education",
-	educationCategories: {
-		university: "University",
-		technical: "Technical Training",
-		certification: "Certifications & Courses",
-		complementary: "Complementary",
-	} as Record<string, string>,
 };
 ---
 
@@ -129,7 +123,7 @@ const uiDictionary = {
 						class="font-mono text-xs tracking-widest"
 						style="color: var(--text-muted);"
 					>
-						002 — work
+						001 — work
 					</p>
 					<h2
 						class="text-3xl md:text-4xl font-black tracking-tight"
@@ -192,7 +186,7 @@ const uiDictionary = {
 								class="font-mono text-xs tracking-widest"
 								style="color: var(--text-muted);"
 							>
-								003 — certifications
+								002 — certifications
 							</p>
 							<h2
 								class="text-3xl md:text-4xl font-black tracking-tight"
@@ -226,7 +220,7 @@ const uiDictionary = {
 								class="font-mono text-xs tracking-widest"
 								style="color: var(--text-muted);"
 							>
-								004 — stack
+								003 — stack
 							</p>
 							<h2
 								class="text-3xl md:text-4xl font-black tracking-tight"
@@ -249,55 +243,44 @@ const uiDictionary = {
 					>
 						<div class="flex flex-col gap-2 mb-12">
 							<p class="font-mono text-xs tracking-widest" style="color: var(--text-muted);">
-								005 — education
+								004 — education
 							</p>
 							<h2 class="text-3xl md:text-4xl font-black tracking-tight" style="color: var(--text-primary);">
 								{uiDictionary.educationTitle}
 							</h2>
 						</div>
-						<div class="flex flex-col gap-12">
-							{educationCategories.map(cat => {
-								const entries = groupedEducation[cat];
-								if (!entries || entries.length === 0) return null;
-								return (
-									<div>
-										<p class="font-mono text-xs tracking-widest mb-6" style="color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;">
-											{uiDictionary.educationCategories[cat]}
-										</p>
-										<div class="relative">
-											<div class="absolute left-0 top-0 bottom-0 w-px" style="background: var(--border-subtle); margin-left: 7px;"></div>
-											<div class="flex flex-col gap-6">
-												{entries.map((entry: any) => {
-													const startYear = entry.start_date ? new Date(entry.start_date).getFullYear() : null;
-													const endYear = entry.is_current ? 'present' : entry.end_date ? new Date(entry.end_date).getFullYear() : null;
-													return (
-														<div class="pl-8 relative">
-															<div class="absolute left-0 w-3.5 h-3.5 rounded-full border" style="background: var(--bg-primary); border-color: var(--color-accent); top: 0.25rem;"></div>
-															<div class="flex flex-col gap-1">
-																<div class="flex flex-wrap items-baseline gap-3">
-																	<h3 class="text-base font-black tracking-tight" style="color: var(--text-primary);">{entry.title}</h3>
-																	{startYear && (
-																		<span class="font-mono text-xs" style="color: var(--text-muted);">
-																			{startYear}{endYear ? ` — ${endYear}` : ''}
-																		</span>
-																	)}
-																</div>
-																<p class="font-mono text-xs" style="color: var(--text-secondary);">{entry.institution}</p>
-																{entry.description && <p class="text-sm mt-1 leading-relaxed" style="color: var(--text-secondary);">{entry.description}</p>}
-																{entry.credential_url && (
-																	<a href={entry.credential_url} target="_blank" rel="noopener noreferrer" class="font-mono text-xs mt-1 transition-colors hover:opacity-80" style="color: var(--color-accent);">
-																		{uiDictionary.viewCredential} ↗
-																	</a>
-																)}
-															</div>
-														</div>
-													);
-												})}
+						<div class="relative">
+							<div class="absolute left-0 top-0 bottom-0 w-px" style="background: var(--border-subtle); margin-left: 7px;"></div>
+							<div class="flex flex-col gap-6">
+								{translatedEducation.map((entry: any) => {
+									const startYear = entry.start_date ? new Date(entry.start_date).getFullYear() : null;
+									const endYear = entry.is_current ? 'present' : entry.end_date ? new Date(entry.end_date).getFullYear() : null;
+									const catLabel = EDUCATION_CATEGORY_LABELS[entry.category] || entry.category;
+									return (
+										<div class="pl-8 relative">
+											<div class="absolute left-0 w-3.5 h-3.5 rounded-full border" style="background: var(--bg-primary); border-color: var(--color-accent); top: 0.25rem;"></div>
+											<div class="flex flex-col gap-1">
+												<div class="flex flex-wrap items-baseline gap-3">
+													<h3 class="text-base font-black tracking-tight" style="color: var(--text-primary);">{entry.title}</h3>
+													<span class="font-mono text-xs" style="color: var(--text-muted);">{catLabel}</span>
+													{startYear && (
+														<span class="font-mono text-xs" style="color: var(--text-muted);">
+															{startYear}{endYear ? ` — ${endYear}` : ''}
+														</span>
+													)}
+												</div>
+												<p class="font-mono text-xs" style="color: var(--text-secondary);">{entry.institution}</p>
+												{entry.description && <p class="text-sm mt-1 leading-relaxed" style="color: var(--text-secondary);">{entry.description}</p>}
+												{entry.credential_url && (
+													<a href={entry.credential_url} target="_blank" rel="noopener noreferrer" class="font-mono text-xs mt-1 transition-colors hover:opacity-80" style="color: var(--color-accent);">
+														{uiDictionary.viewCredential} ↗
+													</a>
+												)}
 											</div>
 										</div>
-									</div>
-								);
-							})}
+									);
+								})}
+							</div>
 						</div>
 					</section>
 				)

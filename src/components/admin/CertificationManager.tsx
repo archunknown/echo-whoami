@@ -1,13 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getAllCertifications, createCertification, updateCertification, deleteCertification } from '../../services/api';
-import type { EducationCategory } from '../../types/supabase';
 
-const CATEGORIES: { value: EducationCategory; label: string }[] = [
-    { value: 'university', label: 'University' },
-    { value: 'technical', label: 'Technical Training' },
-    { value: 'certification', label: 'Certifications & Courses' },
-    { value: 'complementary', label: 'Complementary' },
-];
+const inputStyle = {
+    width: '100%',
+    padding: '0.5rem 0.75rem',
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border-default)',
+    color: 'var(--text-primary)',
+    fontSize: '0.85rem',
+    outline: 'none',
+    borderRadius: '2px',
+} as const;
+
+const labelStyle = {
+    fontFamily: 'monospace',
+    fontSize: '0.65rem',
+    letterSpacing: '0.12em',
+    color: 'var(--text-muted)',
+    display: 'block',
+    marginBottom: '0.25rem',
+} as const;
 
 export default function CertificationManager() {
     const [certifications, setCertifications] = useState<any[]>([]);
@@ -15,93 +27,89 @@ export default function CertificationManager() {
     const [error, setError] = useState<string | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSavingOrder, setIsSavingOrder] = useState(false);
+
+    // Drag state
+    const draggingId = useRef<string | null>(null);
+    const [dragOverId, setDragOverId] = useState<string | null>(null);
 
     // Form state
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [editLang, setEditLang] = useState<'en' | 'es'>('en');
     const [titleEn, setTitleEn] = useState('');
     const [titleEs, setTitleEs] = useState('');
     const [issuer, setIssuer] = useState('');
     const [issueDate, setIssueDate] = useState('');
     const [credentialUrl, setCredentialUrl] = useState('');
     const [isPublished, setIsPublished] = useState(false);
-    const [orderIndex, setOrderIndex] = useState(0);
-    const [category, setCategory] = useState<EducationCategory>('certification');
 
-    useEffect(() => {
-        loadCertifications();
-    }, []);
+    useEffect(() => { load(); }, []);
 
-    const loadCertifications = async () => {
+    const load = async () => {
         setIsLoading(true);
         setError(null);
         try {
             const data = await getAllCertifications();
-            setCertifications(data || []);
-        } catch (err: any) {
-            console.error(err);
+            const sorted = (data || []).slice().sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0));
+            setCertifications(sorted);
+        } catch {
             setError('Failed to load certifications.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleOpenNew = () => {
+    const resetForm = () => {
         setEditingId(null);
-        setTitleEn('');
-        setTitleEs('');
+        setEditLang('en');
+        setTitleEn(''); setTitleEs('');
         setIssuer('');
         setIssueDate('');
         setCredentialUrl('');
         setIsPublished(false);
-        setOrderIndex(certifications.length);
-        setCategory('certification');
-        setIsFormOpen(true);
     };
+
+    const handleNew = () => { resetForm(); setIsFormOpen(true); };
 
     const handleEdit = (cert: any) => {
         setEditingId(cert.id);
-
-        // Parse title JSONB
+        setEditLang('en');
         const titleObj = cert.title as { en?: string; es?: string } || {};
-        setTitleEn(titleObj.en || '');
-        setTitleEs(titleObj.es || '');
-
+        setTitleEn(titleObj.en || ''); setTitleEs(titleObj.es || '');
         setIssuer(cert.issuer || '');
         setIssueDate(cert.issue_date ? cert.issue_date.split('T')[0] : '');
         setCredentialUrl(cert.credential_url || '');
         setIsPublished(cert.is_published || false);
-        setOrderIndex(cert.order_index || 0);
-        setCategory((cert.category as EducationCategory) || 'certification');
-
         setIsFormOpen(true);
     };
 
     const handleDelete = async (id: string, name: string) => {
-        if (window.confirm(`Are you sure you want to delete the certification "${name}"?`)) {
-            try {
-                await deleteCertification(id);
-                await loadCertifications();
-            } catch (err: any) {
-                console.error(err);
-                alert('Failed to delete certification.');
-            }
+        if (!window.confirm(`Delete "${name}"?`)) return;
+        try {
+            await deleteCertification(id);
+            await load();
+        } catch {
+            setError('Failed to delete certification.');
         }
     };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!titleEn.trim()) { setError('Title (EN) is required.'); return; }
+        if (!issuer.trim()) { setError('Issuer is required.'); return; }
+
         setIsSaving(true);
         setError(null);
-
         try {
             const certData: any = {
                 title: { en: titleEn, es: titleEs },
                 issuer,
-                credential_url: credentialUrl || null,
+                credential_url: credentialUrl.trim() || null,
                 is_published: isPublished,
-                order_index: orderIndex,
-                category,
                 issue_date: issueDate || null,
+                order_index: editingId
+                    ? (certifications.find(c => c.id === editingId)?.order_index ?? certifications.length)
+                    : certifications.length,
             };
 
             if (editingId) {
@@ -111,66 +119,160 @@ export default function CertificationManager() {
             }
 
             setIsFormOpen(false);
-            await loadCertifications();
+            await load();
         } catch (err: any) {
-            console.error(err);
             setError(err.message || 'Failed to save certification.');
         } finally {
             setIsSaving(false);
         }
     };
 
-    if (isLoading && !isFormOpen && certifications.length === 0) {
-        return <div className="py-12 text-center font-mono text-sm" style={{ color: 'var(--text-muted)' }}>Loading certifications...</div>;
+    // ── Drag and Drop ──────────────────────────────────────────────────────────
+    const handleDragStart = (id: string) => { draggingId.current = id; };
+
+    const handleDragOver = (e: React.DragEvent, id: string) => {
+        e.preventDefault();
+        if (draggingId.current !== id) setDragOverId(id);
+    };
+
+    const handleDrop = async (e: React.DragEvent, targetId: string) => {
+        e.preventDefault();
+        setDragOverId(null);
+        const fromId = draggingId.current;
+        draggingId.current = null;
+        if (!fromId || fromId === targetId) return;
+
+        const fromIdx = certifications.findIndex(c => c.id === fromId);
+        const toIdx = certifications.findIndex(c => c.id === targetId);
+        if (fromIdx === -1 || toIdx === -1) return;
+
+        const reordered = [...certifications];
+        const [moved] = reordered.splice(fromIdx, 1);
+        reordered.splice(toIdx, 0, moved);
+
+        const withNewIndex = reordered.map((cert, i) => ({ ...cert, order_index: i }));
+        const oldIndexMap = Object.fromEntries(certifications.map(c => [c.id, c.order_index ?? 0]));
+        const changed = withNewIndex.filter(c => c.order_index !== oldIndexMap[c.id]);
+
+        setCertifications(withNewIndex);
+
+        if (changed.length === 0) return;
+        setIsSavingOrder(true);
+        try {
+            await Promise.all(changed.map(c => updateCertification(c.id, { order_index: c.order_index })));
+        } catch {
+            setError('Failed to save order. Refreshing...');
+            await load();
+        } finally {
+            setIsSavingOrder(false);
+        }
+    };
+
+    const handleDragEnd = () => {
+        draggingId.current = null;
+        setDragOverId(null);
+    };
+
+    if (isLoading && certifications.length === 0) {
+        return <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading...</div>;
     }
 
     if (isFormOpen) {
+        const isEs = editLang === 'es';
         return (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderTop: 'none', padding: '2rem' }}>
-                <div className="flex justify-between items-center mb-6 pb-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <h3 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--text-primary)', margin: 0 }}>
                         {editingId ? 'Edit Certification' : 'New Certification'}
                     </h3>
-                    <button onClick={() => setIsFormOpen(false)} className="font-mono text-xs tracking-widest transition-colors" style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <button onClick={() => setIsFormOpen(false)} style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>
                         ✕ cancel
                     </button>
                 </div>
 
+                {/* Language switcher */}
+                <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem' }}>
+                    {(['en', 'es'] as const).map(lang => (
+                        <button
+                            key={lang}
+                            type="button"
+                            onClick={() => setEditLang(lang)}
+                            style={{
+                                fontFamily: 'monospace',
+                                fontSize: '0.65rem',
+                                letterSpacing: '0.12em',
+                                padding: '0.3rem 0.75rem',
+                                background: editLang === lang ? 'var(--color-accent)' : 'transparent',
+                                color: editLang === lang ? '#fff' : 'var(--text-muted)',
+                                border: `1px solid ${editLang === lang ? 'var(--color-accent)' : 'var(--border-default)'}`,
+                                borderRadius: '2px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                            }}
+                        >
+                            {lang.toUpperCase()}
+                        </button>
+                    ))}
+                    {isEs && (
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'var(--text-muted)', alignSelf: 'center', marginLeft: '0.5rem' }}>
+                            EN values shown as placeholders
+                        </span>
+                    )}
+                </div>
+
                 {error && (
-                    <div className="mb-6 p-4 text-sm font-mono" style={{ background: '#1a0000', border: '1px solid #ff4444', color: '#ff6666', borderRadius: '2px' }}>
+                    <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#1a0000', border: '1px solid #8b0000', color: '#c0392b', fontFamily: 'monospace', fontSize: '0.75rem', borderRadius: '2px' }}>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSave} className="flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <CertField label="Title (EN) *" value={titleEn} onChange={setTitleEn} required />
-                        <CertField label="Title (ES)" value={titleEs} onChange={setTitleEs} />
+                <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {/* Title */}
+                    <div>
+                        <label style={labelStyle}>Title {isEs ? '(ES)' : '(EN) *'}</label>
+                        <input
+                            type="text"
+                            value={isEs ? titleEs : titleEn}
+                            onChange={e => isEs ? setTitleEs(e.target.value) : setTitleEn(e.target.value)}
+                            placeholder={isEs ? titleEn || 'Translation of EN title...' : ''}
+                            style={inputStyle}
+                        />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <CertField label="Issuer *" value={issuer} onChange={setIssuer} required />
+
+                    {/* Issuer + Date (only on EN tab — language-neutral fields) */}
+                    {!isEs && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label style={labelStyle}>Issuer *</label>
+                                <input type="text" value={issuer} onChange={e => setIssuer(e.target.value)} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>Issue Date</label>
+                                <input type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)} style={inputStyle} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Credential URL (language-neutral) */}
+                    {!isEs && (
                         <div>
-                            <label className="block font-mono text-xs tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Category</label>
-                            <select value={category} onChange={e => setCategory(e.target.value as EducationCategory)} className="w-full px-3 py-2 text-sm outline-none" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', borderRadius: '2px' }}>
-                                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                            </select>
+                            <label style={labelStyle}>Credential URL</label>
+                            <input type="url" value={credentialUrl} onChange={e => setCredentialUrl(e.target.value)} placeholder="https://..." style={inputStyle} />
                         </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <CertField label="Issue Date" type="date" value={issueDate} onChange={setIssueDate} />
-                        <CertField label="Credential URL" type="url" value={credentialUrl} onChange={setCredentialUrl} />
-                        <CertField label="Order Index" type="number" value={String(orderIndex)} onChange={v => setOrderIndex(parseInt(v) || 0)} required />
-                    </div>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <div onClick={() => setIsPublished(!isPublished)} style={{ width: '2.2rem', height: '1.2rem', background: isPublished ? 'var(--color-accent)' : 'var(--border-default)', borderRadius: '10px', position: 'relative', cursor: 'pointer', transition: 'background 0.15s' }}>
-                            <div style={{ position: 'absolute', top: '0.15rem', width: '0.9rem', height: '0.9rem', background: '#fff', borderRadius: '50%', transition: 'transform 0.15s', transform: isPublished ? 'translateX(1.15rem)' : 'translateX(0.15rem)' }} />
-                        </div>
-                        <span className="font-mono text-xs tracking-widest" style={{ color: 'var(--text-secondary)' }}>published</span>
-                    </label>
-                    <div className="pt-4 flex justify-end gap-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                        <button type="button" onClick={() => setIsFormOpen(false)} className="font-mono text-xs px-6 py-2 transition-colors" style={{ border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}>cancel</button>
-                        <button type="submit" disabled={isSaving} className="font-mono text-xs font-bold px-6 py-2 disabled:opacity-50" style={{ background: 'var(--color-accent)', color: '#fff', border: '1px solid var(--color-accent)', borderRadius: '2px' }}>
-                            {isSaving ? 'saving...' : editingId ? 'save' : 'create'}
+                    )}
+
+                    {/* Published toggle */}
+                    {!isEs && (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <Toggle checked={isPublished} onChange={setIsPublished} />
+                            <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>published</span>
+                        </label>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
+                        <button type="button" onClick={() => setIsFormOpen(false)} style={{ padding: '0.6rem 1.5rem', background: 'transparent', border: '1px solid var(--border-default)', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.7rem', cursor: 'pointer', borderRadius: '2px' }}>cancel</button>
+                        <button type="submit" disabled={isSaving} style={{ padding: '0.6rem 2rem', background: 'var(--color-accent)', color: '#fff', border: '1px solid var(--color-accent)', fontFamily: 'monospace', fontSize: '0.7rem', fontWeight: 700, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.5 : 1, borderRadius: '2px' }}>
+                            {isSaving ? 'saving...' : editingId ? 'save changes' : 'create'}
                         </button>
                     </div>
                 </form>
@@ -180,77 +282,91 @@ export default function CertificationManager() {
 
     return (
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderTop: 'none', overflow: 'hidden' }}>
-            <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h3 className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Certifications</h3>
-                    <p className="font-mono text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{certifications.length} total</p>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Certifications</h3>
+                    <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        {certifications.length} total · drag to reorder
+                        {isSavingOrder && ' · saving order...'}
+                    </p>
                 </div>
-                <button onClick={handleOpenNew} className="font-mono text-xs tracking-widest px-6 py-2 font-bold" style={{ background: 'var(--color-accent)', color: '#fff', border: '1px solid var(--color-accent)', borderRadius: '2px' }}>
+                <button onClick={handleNew} style={{ padding: '0.5rem 1.25rem', background: 'var(--color-accent)', color: '#fff', border: '1px solid var(--color-accent)', fontFamily: 'monospace', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', borderRadius: '2px' }}>
                     + new certification
                 </button>
             </div>
 
             {error && (
-                <div className="m-6 p-4 text-sm font-mono" style={{ background: '#1a0000', border: '1px solid #ff4444', color: '#ff6666', borderRadius: '2px' }}>
+                <div style={{ margin: '1rem', padding: '0.75rem', background: '#1a0000', border: '1px solid #8b0000', color: '#c0392b', fontFamily: 'monospace', fontSize: '0.75rem', borderRadius: '2px' }}>
                     {error}
                 </div>
             )}
 
-            {isLoading ? (
-                <div className="p-8 text-center font-mono text-sm" style={{ color: 'var(--text-muted)' }}>Loading...</div>
-            ) : certifications.length === 0 ? (
-                <div className="p-8 text-center font-mono text-sm" style={{ color: 'var(--text-muted)' }}>No certifications found.</div>
+            {certifications.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>No certifications yet.</div>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                        <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                            <tr>
-                                {['Title (EN)', 'Issuer', 'Category', 'Date', 'Status', 'Actions'].map(h => (
-                                    <th key={h} className="px-6 py-3 font-mono text-xs tracking-widest" style={{ color: 'var(--text-muted)' }}>{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {certifications.map((cert) => {
-                                const title = (cert.title as { en?: string })?.en || 'Untitled';
-                                return (
-                                    <tr key={cert.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                                        <td className="px-6 py-4 font-medium" style={{ color: 'var(--text-primary)' }}>{title}</td>
-                                        <td className="px-6 py-4 text-sm" style={{ color: 'var(--text-secondary)' }}>{cert.issuer}</td>
-                                        <td className="px-6 py-4 font-mono text-xs" style={{ color: 'var(--text-muted)' }}>{cert.category || '—'}</td>
-                                        <td className="px-6 py-4 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{cert.issue_date ? new Date(cert.issue_date).toLocaleDateString() : '—'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="font-mono text-xs px-2 py-0.5" style={{ border: `1px solid ${cert.is_published ? 'var(--color-accent)' : 'var(--border-subtle)'}`, color: cert.is_published ? 'var(--color-accent)' : 'var(--text-muted)', borderRadius: '2px' }}>
-                                                {cert.is_published ? 'published' : 'draft'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button onClick={() => handleEdit(cert)} className="font-mono text-xs mr-4 transition-colors" style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}>edit</button>
-                                            <button onClick={() => handleDelete(cert.id, title)} className="font-mono text-xs transition-colors" style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>delete</button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                <div>
+                    {certifications.map(cert => {
+                        const title = (cert.title as { en?: string })?.en || 'Untitled';
+                        const isDragTarget = dragOverId === cert.id;
+                        return (
+                            <div
+                                key={cert.id}
+                                draggable
+                                onDragStart={() => handleDragStart(cert.id)}
+                                onDragOver={e => handleDragOver(e, cert.id)}
+                                onDrop={e => handleDrop(e, cert.id)}
+                                onDragEnd={handleDragEnd}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '0.875rem 1.5rem',
+                                    borderBottom: '1px solid var(--border-subtle)',
+                                    gap: '0.75rem',
+                                    borderTop: isDragTarget ? '2px solid var(--color-accent)' : '2px solid transparent',
+                                    transition: 'border-top 0.1s',
+                                    cursor: 'default',
+                                }}
+                            >
+                                {/* Drag handle */}
+                                <span
+                                    style={{ fontSize: '1rem', color: 'var(--text-muted)', cursor: 'grab', userSelect: 'none', flexShrink: 0, lineHeight: 1 }}
+                                    title="Drag to reorder"
+                                >
+                                    ⠿
+                                </span>
+
+                                {/* Info */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</p>
+                                    <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0' }}>
+                                        {cert.issuer}{cert.issue_date ? ` · ${new Date(cert.issue_date).getFullYear()}` : ''}
+                                    </p>
+                                </div>
+
+                                {/* Status + Actions */}
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+                                    <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: cert.is_published ? 'var(--color-accent)' : 'var(--text-muted)', border: `1px solid ${cert.is_published ? 'var(--color-accent)' : 'var(--border-subtle)'}`, padding: '0.1rem 0.4rem', borderRadius: '2px' }}>
+                                        {cert.is_published ? 'published' : 'draft'}
+                                    </span>
+                                    <button onClick={() => handleEdit(cert)} style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem 0.25rem' }}>edit</button>
+                                    <button onClick={() => handleDelete(cert.id, title)} style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem 0.25rem' }}>delete</button>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
     );
 }
 
-function CertField({ label, value, onChange, type = 'text', required = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
     return (
-        <div>
-            <label className="block font-mono text-xs tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</label>
-            <input
-                type={type}
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                required={required}
-                className="w-full px-3 py-2 text-sm outline-none"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', borderRadius: '2px' }}
-            />
+        <div
+            onClick={() => onChange(!checked)}
+            style={{ width: '2.2rem', height: '1.2rem', background: checked ? 'var(--color-accent)' : 'var(--border-default)', borderRadius: '10px', position: 'relative', cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0 }}
+        >
+            <div style={{ position: 'absolute', top: '0.15rem', width: '0.9rem', height: '0.9rem', background: '#fff', borderRadius: '50%', transition: 'transform 0.15s', transform: checked ? 'translateX(1.15rem)' : 'translateX(0.15rem)' }} />
         </div>
     );
 }
