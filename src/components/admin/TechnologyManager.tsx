@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllTechnologies, createTechnology, updateTechnology, deleteTechnology } from '../../services/api';
 
-const CATEGORIES = ['Frontend', 'Backend', 'Database', 'DevOps/Tools', 'OS', 'Other'];
-
 const DEVICONS_BASE = 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons';
 const buildDeviconsUrl = (slug: string) => `${DEVICONS_BASE}/${slug}/${slug}-original.svg`;
 const isDeviconsUrl = (url: string) => url.includes('cdn.jsdelivr.net/gh/devicons/devicon');
@@ -48,7 +46,6 @@ export default function TechnologyManager() {
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [name, setName] = useState('');
-    const [category, setCategory] = useState(CATEGORIES[0]);
     const [color, setColor] = useState('#888888');
     const [iconSource, setIconSource] = useState<IconSource>('simpleicons');
     const [simpleSlug, setSimpleSlug] = useState('');
@@ -72,7 +69,7 @@ export default function TechnologyManager() {
 
     const resetForm = () => {
         setEditingId(null);
-        setName(''); setCategory(CATEGORIES[0]); setColor('#888888');
+        setName(''); setColor('#888888');
         setIconSource('simpleicons');
         setSimpleSlug(''); setDevSlug(''); setCustomUrl('');
     };
@@ -82,7 +79,6 @@ export default function TechnologyManager() {
     const openEdit = (tech: any) => {
         setEditingId(tech.id);
         setName(tech.name);
-        setCategory(tech.category || CATEGORIES[0]);
         setColor(tech.color || '#888888');
 
         if (tech.logo_url) {
@@ -132,7 +128,7 @@ export default function TechnologyManager() {
         try {
             const techData: any = {
                 name: name.trim(),
-                category,
+                category: 'Other',
                 color: color || null,
                 icon_slug: iconSource === 'simpleicons' ? (simpleSlug.trim() || null) : null,
                 logo_url: iconSource === 'devicons'
@@ -167,13 +163,6 @@ export default function TechnologyManager() {
         return customUrl || null;
     })();
 
-    const techByCategory = technologies.reduce((acc: Record<string, any[]>, tech) => {
-        const cat = tech.category || 'Other';
-        acc[cat] = acc[cat] || [];
-        acc[cat].push(tech);
-        return acc;
-    }, {});
-
     if (isLoading && technologies.length === 0) {
         return <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading...</div>;
     }
@@ -202,25 +191,17 @@ export default function TechnologyManager() {
                 {error && <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#1a0000', border: '1px solid #8b0000', color: '#c0392b', fontFamily: 'monospace', fontSize: '0.75rem', borderRadius: '2px' }}>{error}</div>}
 
                 <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    {/* Name + Category */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label style={labelStyle}>Name *</label>
-                            <input
-                                type="text"
-                                required
-                                value={name}
-                                onChange={e => handleNameChange(e.target.value)}
-                                placeholder="e.g. React"
-                                style={inputStyle}
-                            />
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Category</label>
-                            <select value={category} onChange={e => setCategory(e.target.value)} style={inputStyle}>
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </div>
+                    {/* Name */}
+                    <div>
+                        <label style={labelStyle}>Name *</label>
+                        <input
+                            type="text"
+                            required
+                            value={name}
+                            onChange={e => handleNameChange(e.target.value)}
+                            placeholder="e.g. React"
+                            style={inputStyle}
+                        />
                     </div>
 
                     {/* Icon source selector */}
@@ -233,7 +214,6 @@ export default function TechnologyManager() {
                         </div>
                     </div>
 
-                    {/* Source-specific input */}
                     {iconSource === 'simpleicons' && (
                         <div>
                             <label style={labelStyle}>Simple Icons slug</label>
@@ -268,7 +248,7 @@ export default function TechnologyManager() {
                         </div>
                     )}
 
-                    {/* Brand color (only relevant for Simple Icons) */}
+                    {/* Brand color */}
                     <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '0.75rem', alignItems: 'end' }}>
                         <div>
                             <label style={labelStyle}>Brand color{iconSource !== 'simpleicons' && <span style={{ opacity: 0.5 }}> (badge only)</span>}</label>
@@ -327,41 +307,30 @@ export default function TechnologyManager() {
             {technologies.length === 0 ? (
                 <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>No technologies yet.</div>
             ) : (
-                <div style={{ padding: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
-                    {CATEGORIES.map(cat => {
-                        const group = techByCategory[cat];
-                        if (!group || group.length === 0) return null;
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {technologies.map((tech: any) => {
+                        const iconSrc = tech.logo_url
+                            ? tech.logo_url
+                            : tech.icon_slug
+                            ? `https://cdn.simpleicons.org/${tech.icon_slug}/${(tech.color || '888888').replace('#', '')}`
+                            : null;
+                        const sourceLabel = tech.logo_url
+                            ? (isDeviconsUrl(tech.logo_url) ? 'devicons' : 'custom')
+                            : 'simpleicons';
                         return (
-                            <div key={cat}>
-                                <p style={{ fontFamily: 'monospace', fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-subtle)' }}>{cat}</p>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {group.map((tech: any) => {
-                                        const iconSrc = tech.logo_url
-                                            ? tech.logo_url
-                                            : tech.icon_slug
-                                            ? `https://cdn.simpleicons.org/${tech.icon_slug}/${(tech.color || '888888').replace('#', '')}`
-                                            : null;
-                                        const sourceLabel = tech.logo_url
-                                            ? (isDeviconsUrl(tech.logo_url) ? 'devicons' : 'custom')
-                                            : 'simpleicons';
-                                        return (
-                                            <div key={tech.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '2px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                                    {iconSrc ? (
-                                                        <img src={iconSrc} alt={tech.name} style={{ width: '18px', height: '18px', objectFit: 'contain' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                                    ) : (
-                                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: tech.color || '#888', flexShrink: 0 }} />
-                                                    )}
-                                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{tech.name}</span>
-                                                    <span style={{ fontFamily: 'monospace', fontSize: '0.55rem', color: 'var(--text-muted)', opacity: 0.6 }}>{sourceLabel}</span>
-                                                </div>
-                                                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                                    <button onClick={() => openEdit(tech)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}>edit</button>
-                                                    <button onClick={() => handleDelete(tech.id, tech.name)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>del</button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                            <div key={tech.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', borderBottom: '1px solid var(--border-subtle)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    {iconSrc ? (
+                                        <img src={iconSrc} alt={tech.name} style={{ width: '18px', height: '18px', objectFit: 'contain', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                    ) : (
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: tech.color || '#888', flexShrink: 0 }} />
+                                    )}
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>{tech.name}</span>
+                                    <span style={{ fontFamily: 'monospace', fontSize: '0.55rem', color: 'var(--text-muted)', opacity: 0.6 }}>{sourceLabel}</span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                    <button onClick={() => openEdit(tech)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer' }}>edit</button>
+                                    <button onClick={() => handleDelete(tech.id, tech.name)} style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>del</button>
                                 </div>
                             </div>
                         );
