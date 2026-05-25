@@ -1,0 +1,433 @@
+---
+interface Entry {
+    id: string;
+    title: string;
+    institution: string;
+    description?: string | null;
+    category: string;
+    start_date?: string | null;
+    end_date?: string | null;
+    is_current?: boolean | null;
+    credential_url?: string | null;
+}
+
+interface Props {
+    entries: Entry[];
+    categoryLabels: Record<string, string>;
+    viewCredential: string;
+    presentLabel?: string;
+}
+
+const { entries, categoryLabels, viewCredential, presentLabel = "present" } =
+    Astro.props;
+
+const CATEGORY_ORDER = [
+    "university",
+    "technical",
+    "certification",
+    "complementary",
+];
+
+const grouped: Record<string, Entry[]> = {};
+for (const entry of entries) {
+    const cat = entry.category || "complementary";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(entry);
+}
+
+const cats = CATEGORY_ORDER.filter((c) => (grouped[c]?.length ?? 0) > 0);
+
+const yr = (e: Entry): string | null => {
+    const s = e.start_date ? new Date(e.start_date).getFullYear() : null;
+    const end = e.is_current
+        ? presentLabel
+        : e.end_date
+          ? new Date(e.end_date).getFullYear()
+          : null;
+    return s ? (end ? `${s} — ${end}` : `${s}`) : null;
+};
+---
+
+<div class="tl-outer">
+    <div class="tl-track">
+
+        <!-- ─── ROW ABOVE: even-indexed categories ─── -->
+        <div class="tl-row row-above">
+            {
+                cats.map((cat, i) => (
+                    <div class="tl-col">
+                        {i % 2 === 0 && (
+                            <>
+                                <div class="tl-card">
+                                    <div class="tl-card-cap">
+                                        <span class="tl-cat-label">
+                                            {categoryLabels[cat] || cat}
+                                        </span>
+                                    </div>
+                                    <div class="tl-entries">
+                                        {grouped[cat].map((e) => (
+                                            <div class="tl-entry">
+                                                <p class="tl-entry-title">
+                                                    {e.title}
+                                                </p>
+                                                <p class="tl-entry-meta">
+                                                    {e.institution}
+                                                    {yr(e) && (
+                                                        <span class="tl-yr">
+                                                            {" "}
+                                                            · {yr(e)}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                                {e.description && (
+                                                    <p class="tl-entry-desc">
+                                                        {e.description}
+                                                    </p>
+                                                )}
+                                                {e.credential_url && (
+                                                    <a
+                                                        href={e.credential_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="tl-entry-cred"
+                                                    >
+                                                        {viewCredential} ↗
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div class="tl-stem tl-stem-above" />
+                            </>
+                        )}
+                    </div>
+                ))
+            }
+        </div>
+
+        <!-- ─── ROW LINE: glow line + nodes ─── -->
+        <div class="tl-row row-line">
+            <div class="tl-glow-line" aria-hidden="true"></div>
+            {
+                cats.map((_, i) => (
+                    <div class="tl-col tl-col-node">
+                        <div
+                            class="tl-node"
+                            style={`--delay: ${i * 0.55}s`}
+                        />
+                    </div>
+                ))
+            }
+        </div>
+
+        <!-- ─── ROW BELOW: odd-indexed categories ─── -->
+        <div class="tl-row row-below">
+            {
+                cats.map((cat, i) => (
+                    <div class="tl-col">
+                        {i % 2 !== 0 && (
+                            <>
+                                <div class="tl-stem tl-stem-below" />
+                                <div class="tl-card">
+                                    <div class="tl-card-cap">
+                                        <span class="tl-cat-label">
+                                            {categoryLabels[cat] || cat}
+                                        </span>
+                                    </div>
+                                    <div class="tl-entries">
+                                        {grouped[cat].map((e) => (
+                                            <div class="tl-entry">
+                                                <p class="tl-entry-title">
+                                                    {e.title}
+                                                </p>
+                                                <p class="tl-entry-meta">
+                                                    {e.institution}
+                                                    {yr(e) && (
+                                                        <span class="tl-yr">
+                                                            {" "}
+                                                            · {yr(e)}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                                {e.description && (
+                                                    <p class="tl-entry-desc">
+                                                        {e.description}
+                                                    </p>
+                                                )}
+                                                {e.credential_url && (
+                                                    <a
+                                                        href={e.credential_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="tl-entry-cred"
+                                                    >
+                                                        {viewCredential} ↗
+                                                    </a>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                ))
+            }
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* ─── Scroll container ─────────────────────────────────── */
+    .tl-outer {
+        overflow-x: auto;
+        overflow-y: visible;
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-accent) var(--bg-secondary);
+        margin: 0 -1.5rem;
+        padding: 0 1.5rem 1.5rem;
+    }
+    .tl-outer::-webkit-scrollbar {
+        height: 3px;
+    }
+    .tl-outer::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+    .tl-outer::-webkit-scrollbar-thumb {
+        background: var(--color-accent);
+        border-radius: 2px;
+    }
+
+    /* ─── Track ────────────────────────────────────────────── */
+    .tl-track {
+        display: flex;
+        flex-direction: column;
+        min-width: max-content;
+        padding: 0 2rem;
+    }
+
+    /* ─── Rows ─────────────────────────────────────────────── */
+    .tl-row {
+        display: flex;
+        align-items: stretch;
+        gap: 2rem;
+    }
+    .row-above {
+        align-items: flex-end;
+        min-height: 240px;
+    }
+    .row-line {
+        position: relative;
+        align-items: center;
+        height: 32px;
+        flex-shrink: 0;
+    }
+    .row-below {
+        align-items: flex-start;
+        min-height: 240px;
+    }
+
+    /* ─── Glowing red timeline line ────────────────────────── */
+    .tl-glow-line {
+        position: absolute;
+        left: -2rem;
+        right: -2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 2px;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            var(--color-accent-bright) 4%,
+            var(--color-accent-bright) 96%,
+            transparent 100%
+        );
+        box-shadow:
+            0 0 6px 2px rgba(192, 57, 43, 0.55),
+            0 0 20px 6px rgba(139, 0, 0, 0.3),
+            0 0 40px 10px rgba(139, 0, 0, 0.12);
+        z-index: 0;
+    }
+
+    /* ─── Columns ──────────────────────────────────────────── */
+    .tl-col {
+        width: 260px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .tl-col-node {
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ─── Node ─────────────────────────────────────────────── */
+    .tl-node {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 2;
+        background: var(--bg-primary);
+        border: 2px solid var(--color-accent-bright);
+        box-shadow:
+            0 0 0 4px rgba(139, 0, 0, 0.12),
+            0 0 10px 3px rgba(192, 57, 43, 0.55);
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+        cursor: default;
+    }
+    .tl-node:hover {
+        transform: scale(1.5);
+        box-shadow:
+            0 0 0 6px rgba(139, 0, 0, 0.2),
+            0 0 18px 5px rgba(192, 57, 43, 0.75);
+    }
+
+    /* Pulse ring on node */
+    @media (prefers-reduced-motion: no-preference) {
+        .tl-node::after {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 1px solid var(--color-accent-bright);
+            opacity: 0;
+            animation: tlPulse 2.8s ease-in-out infinite;
+            animation-delay: var(--delay, 0s);
+        }
+    }
+    @keyframes tlPulse {
+        0%,
+        100% {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        50% {
+            opacity: 0.35;
+            transform: scale(1.7);
+        }
+    }
+
+    /* ─── Connector stem ───────────────────────────────────── */
+    .tl-stem {
+        width: 1px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+    .tl-stem-above {
+        background: linear-gradient(
+            to bottom,
+            rgba(44, 44, 44, 0.6),
+            rgba(192, 57, 43, 0.6)
+        );
+    }
+    .tl-stem-below {
+        background: linear-gradient(
+            to bottom,
+            rgba(192, 57, 43, 0.6),
+            rgba(44, 44, 44, 0.6)
+        );
+    }
+
+    /* ─── Card ─────────────────────────────────────────────── */
+    .tl-card {
+        width: 100%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        box-shadow:
+            0 2px 12px rgba(0, 0, 0, 0.4),
+            0 8px 32px rgba(0, 0, 0, 0.3);
+        transition:
+            border-color 0.25s ease,
+            box-shadow 0.25s ease,
+            transform 0.25s ease;
+        flex-shrink: 0;
+    }
+    .tl-card:hover {
+        border-color: rgba(139, 0, 0, 0.45);
+        box-shadow:
+            0 0 0 1px rgba(139, 0, 0, 0.12),
+            0 0 20px rgba(139, 0, 0, 0.1),
+            0 8px 40px rgba(0, 0, 0, 0.5);
+        transform: translateY(-2px);
+    }
+
+    /* Category cap */
+    .tl-card-cap {
+        padding: 0.75rem 1rem 0.6rem;
+        border-bottom: 1px solid var(--border-subtle);
+        background: rgba(139, 0, 0, 0.04);
+    }
+    .tl-cat-label {
+        font-family: monospace;
+        font-size: 0.58rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--color-accent-bright);
+    }
+
+    /* Entries list */
+    .tl-entries {
+        padding: 0.75rem 1rem 0.875rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+    .tl-entry {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        padding-bottom: 0.7rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+    .tl-entry:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    .tl-entry-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.35;
+    }
+    .tl-entry-meta {
+        font-family: monospace;
+        font-size: 0.62rem;
+        color: var(--text-secondary);
+        margin-top: 0.05rem;
+    }
+    .tl-yr {
+        color: var(--text-muted);
+    }
+    .tl-entry-desc {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-top: 0.2rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+    .tl-entry-cred {
+        font-family: monospace;
+        font-size: 0.58rem;
+        color: var(--color-accent);
+        text-decoration: none;
+        margin-top: 0.2rem;
+        display: inline-block;
+        transition: opacity 0.15s, color 0.15s;
+    }
+    .tl-entry-cred:hover {
+        color: var(--color-accent-bright);
+        opacity: 0.9;
+    }
+</style>
