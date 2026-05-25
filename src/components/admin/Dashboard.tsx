@@ -8,19 +8,16 @@ export default function Dashboard() {
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-    // States for the bilingual bio
     const [bioEn, setBioEn] = useState('');
     const [bioEs, setBioEs] = useState('');
-
     const [displayName, setDisplayName] = useState('');
     const [avatarUrl, setAvatarUrl] = useState('');
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [githubUrl, setGithubUrl] = useState('');
     const [linkedinUrl, setLinkedinUrl] = useState('');
-    const [twitterUrl, setTwitterUrl] = useState('');
-    const [resumeUrlEn, setResumeUrlEn] = useState('');
-    const [resumeUrlEs, setResumeUrlEs] = useState('');
-
+    const [contactEmail, setContactEmail] = useState('');
+    const [cvUrl, setCvUrl] = useState('');
+    const [cvFile, setCvFile] = useState<File | null>(null);
 
     useEffect(() => {
         loadProfile();
@@ -33,7 +30,7 @@ export default function Dashboard() {
             const data = await getProfile();
             setProfile(data);
 
-            if (data && data.bio) {
+            if (data?.bio) {
                 const bio = data.bio as { en?: string; es?: string };
                 setBioEn(bio.en || '');
                 setBioEs(bio.es || '');
@@ -42,13 +39,15 @@ export default function Dashboard() {
             if (data?.avatar_url) setAvatarUrl(data.avatar_url);
             if (data?.github_url) setGithubUrl(data.github_url);
             if (data?.linkedin_url) setLinkedinUrl((data as any).linkedin_url || '');
-            if (data?.twitter_url) setTwitterUrl((data as any).twitter_url || '');
+            if ((data as any)?.contact_email) setContactEmail((data as any).contact_email);
             if (data?.resume_url) {
-                const ru = data.resume_url as { en?: string; es?: string };
-                setResumeUrlEn(ru.en || '');
-                setResumeUrlEs(ru.es || '');
+                const ru = data.resume_url as { en?: string; es?: string } | string;
+                if (typeof ru === 'string') {
+                    setCvUrl(ru);
+                } else {
+                    setCvUrl(ru.en || ru.es || '');
+                }
             }
-
         } catch (err: any) {
             console.error(err);
             setError('Failed to load profile data.');
@@ -75,20 +74,27 @@ export default function Dashboard() {
                 setAvatarFile(null);
             }
 
+            let finalCvUrl = cvUrl;
+            if (cvFile) {
+                const fileName = `cv/cv-${Date.now()}.pdf`;
+                finalCvUrl = await uploadImage(cvFile, 'portfolio-assets', fileName);
+                setCvUrl(finalCvUrl);
+                setCvFile(null);
+            }
+
             const updates = {
                 display_name: displayName || null,
                 avatar_url: finalAvatarUrl || null,
                 bio: { en: bioEn, es: bioEs },
                 github_url: githubUrl.trim() || null,
                 linkedin_url: linkedinUrl.trim() || null,
-                twitter_url: twitterUrl.trim() || null,
-                resume_url: resumeUrlEn || resumeUrlEs ? { en: resumeUrlEn, es: resumeUrlEs } : null,
+                contact_email: contactEmail.trim() || null,
+                twitter_url: null,
+                resume_url: finalCvUrl ? { en: finalCvUrl, es: finalCvUrl } : null,
             };
 
             await updateProfile(profile.id, updates);
             setSuccessMsg('Profile updated successfully!');
-
-            // Clear success message after 3 seconds
             setTimeout(() => setSuccessMsg(null), 3000);
         } catch (err: any) {
             console.error(err);
@@ -152,15 +158,35 @@ export default function Dashboard() {
                         </div>
                         <DashInput label="GitHub URL" value={githubUrl} onChange={setGithubUrl} placeholder="https://github.com/username" />
                         <DashInput label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="https://linkedin.com/in/username" />
-                        <DashInput label="Twitter / X URL" value={twitterUrl} onChange={setTwitterUrl} placeholder="https://twitter.com/username" />
+                        <DashInput label="Contact Email" value={contactEmail} onChange={setContactEmail} placeholder="you@example.com" type="email" />
                     </div>
                 </div>
 
                 <div className="pt-6 border-t mt-2" style={{ borderColor: 'var(--border-subtle)' }}>
                     <p className="font-mono text-xs tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>03 — resume / cv</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <DashInput label="CV URL (EN)" value={resumeUrlEn} onChange={setResumeUrlEn} placeholder="https://..." />
-                        <DashInput label="CV URL (ES)" value={resumeUrlEs} onChange={setResumeUrlEs} placeholder="https://..." />
+                    <div className="flex flex-col gap-4">
+                        {cvUrl && (
+                            <div className="flex items-center gap-3 p-3" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '2px' }}>
+                                <span className="font-mono text-xs" style={{ color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {cvUrl}
+                                </span>
+                                <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-xs shrink-0" style={{ color: 'var(--color-accent)' }}>
+                                    open ↗
+                                </a>
+                                <button type="button" onClick={() => setCvUrl('')} className="font-mono text-xs shrink-0" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>× remove</button>
+                            </div>
+                        )}
+                        <div>
+                            <label className="block font-mono text-xs tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Upload PDF</label>
+                            <input
+                                type="file"
+                                accept=".pdf,application/pdf"
+                                onChange={e => { if (e.target.files?.[0]) setCvFile(e.target.files[0]); }}
+                                className="text-sm"
+                                style={{ color: 'var(--text-secondary)' }}
+                            />
+                            {cvFile && <p className="font-mono text-xs mt-1" style={{ color: 'var(--color-accent)' }}>New file: {cvFile.name}</p>}
+                        </div>
                     </div>
                 </div>
 
