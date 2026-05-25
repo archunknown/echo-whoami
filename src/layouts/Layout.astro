@@ -53,7 +53,6 @@ const canonicalURL = Astro.url.href;
     <body>
         <!-- Custom cursor (fine pointer devices only) -->
         <div id="cursor-dot"></div>
-        <div id="cursor-ring"></div>
 
         <!-- Loading screen — starts dark to avoid white flash -->
         <div
@@ -136,49 +135,14 @@ const canonicalURL = Astro.url.href;
 
             // ── Custom cursor (fine pointer only) ─────────────────────
             const dot = document.getElementById("cursor-dot") as HTMLElement | null;
-            const ring = document.getElementById("cursor-ring") as HTMLElement | null;
 
-            if (dot && ring && window.matchMedia("(pointer: fine)").matches) {
-                let dotX = -100, dotY = -100;
-                let ringX = -100, ringY = -100;
-                let rafRunning = false;
-
-                function animateRing() {
-                    ringX += (dotX - ringX) * 0.12;
-                    ringY += (dotY - ringY) * 0.12;
-                    ring!.style.transform = `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`;
-                    if (Math.abs(dotX - ringX) > 0.1 || Math.abs(dotY - ringY) > 0.1) {
-                        requestAnimationFrame(animateRing);
-                    } else {
-                        rafRunning = false;
-                    }
-                }
-
+            if (dot && window.matchMedia("(pointer: fine)").matches) {
                 document.addEventListener("mousemove", (e) => {
-                    dotX = e.clientX;
-                    dotY = e.clientY;
-                    dot!.style.transform = `translate(calc(${dotX}px - 50%), calc(${dotY}px - 50%))`;
-                    if (!rafRunning) {
-                        rafRunning = true;
-                        requestAnimationFrame(animateRing);
-                    }
+                    dot!.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
                 });
 
                 document.addEventListener("mousedown", () => document.body.classList.add("cursor-clicking"));
                 document.addEventListener("mouseup", () => document.body.classList.remove("cursor-clicking"));
-
-                const addHoverListeners = (root: Document | Element) => {
-                    root.querySelectorAll("a, button, [role='button'], label, input, textarea, select").forEach((el) => {
-                        el.addEventListener("mouseenter", () => document.body.classList.add("cursor-hovering"));
-                        el.addEventListener("mouseleave", () => document.body.classList.remove("cursor-hovering"));
-                    });
-                };
-
-                addHoverListeners(document);
-
-                // Re-apply listeners when React mounts dynamic elements
-                const mo = new MutationObserver(() => addHoverListeners(document));
-                mo.observe(document.body, { childList: true, subtree: true });
             }
 
             // ── Whoami easter egg ─────────────────────────────────────
