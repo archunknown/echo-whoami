@@ -4,16 +4,32 @@ interface Props {
     lang: SupportedLanguage;
 }
 const { lang } = Astro.props;
+
+const isEs = lang === "es";
+const navItems = isEs
+    ? [
+          { label: "trabajo", href: "#proyectos" },
+          { label: "certs", href: "#certificaciones" },
+          { label: "stack", href: "#stack" },
+          { label: "educación", href: "#educacion" },
+          { label: "contacto", href: "#contacto" },
+      ]
+    : [
+          { label: "work", href: "#proyectos" },
+          { label: "certs", href: "#certifications" },
+          { label: "stack", href: "#stack" },
+          { label: "education", href: "#education" },
+          { label: "contact", href: "#contact" },
+      ];
 ---
 
 <header
     style="border-bottom: 1px solid var(--border-subtle); background: var(--bg-primary);"
     class="w-full sticky top-0 z-50"
 >
-    <div
-        class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center"
-    >
-        <div class="flex items-center gap-2">
+    <!-- Row 1: logo + lang switcher -->
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between py-3">
+        <a href={isEs ? "/es" : "/"} class="flex items-center gap-2">
             <span
                 class="font-mono text-xs tracking-widest"
                 style="color: var(--text-secondary);"
@@ -21,36 +37,128 @@ const { lang } = Astro.props;
                 echo-whoami
             </span>
             <div
-                class="w-1.5 h-1.5 rounded-full animate-pulse"
+                class="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
                 style="background-color: var(--color-accent-bright);"
             >
             </div>
-        </div>
+        </a>
 
         <nav class="flex items-center gap-1 font-mono text-xs">
             <a
                 href="/"
-                class:list={[
-                    "px-3 py-3 sm:py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
-                    lang === "en"
-                        ? "text-(var(--text-primary))"
-                        : "text-neutral-400",
-                ]}
+                class="px-2 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))"
+                style={lang === "en"
+                    ? "color: var(--text-primary);"
+                    : "color: var(--text-muted);"}
             >
                 EN
             </a>
             <span style="color: var(--border-default);">·</span>
             <a
                 href="/es"
-                class:list={[
-                    "px-3 py-3 sm:py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))",
-                    lang === "es"
-                        ? "text-(var(--text-primary))"
-                        : "text-neutral-400",
-                ]}
+                class="px-2 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))"
+                style={lang === "es"
+                    ? "color: var(--text-primary);"
+                    : "color: var(--text-muted);"}
             >
                 ES
             </a>
         </nav>
     </div>
+
+    <!-- Row 2: section nav, centered, scrollable on mobile -->
+    <div
+        class="nav-scroll w-full overflow-x-auto"
+        style="border-top: 1px solid var(--border-subtle);"
+    >
+        <nav
+            class="flex items-center justify-center font-mono text-xs py-2 px-4"
+            style="min-width: max-content; margin: 0 auto;"
+        >
+            {
+                navItems.map((item, i) => (
+                    <>
+                        <a
+                            href={item.href}
+                            data-section-link
+                            class="nav-link px-3 py-1 tracking-widest transition-colors duration-200 whitespace-nowrap hover:text-(var(--text-primary))"
+                            style={`color: var(--text-muted); --nav-delay: ${(i * 0.9).toFixed(1)}s`}
+                        >
+                            {item.label}
+                        </a>
+                        {i < navItems.length - 1 && (
+                            <span style="color: var(--border-default);">
+                                ·
+                            </span>
+                        )}
+                    </>
+                ))
+            }
+        </nav>
+    </div>
 </header>
+
+<style>
+    .nav-scroll {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .nav-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .nav-link {
+            animation: navFlicker 5s ease-in-out infinite;
+            animation-delay: var(--nav-delay, 0s);
+        }
+    }
+    @keyframes navFlicker {
+        0%, 100% {
+            color: var(--text-muted);
+            text-shadow: none;
+        }
+        48%, 52% {
+            color: var(--text-secondary);
+            text-shadow:
+                0 0 6px rgba(192, 57, 43, 0.45),
+                0 0 14px rgba(139, 0, 0, 0.25);
+        }
+        50% {
+            color: var(--text-primary);
+            text-shadow:
+                0 0 8px rgba(192, 57, 43, 0.6),
+                0 0 20px rgba(139, 0, 0, 0.35);
+        }
+    }
+</style>
+
+<script>
+    function syncHeaderHeight() {
+        const header = document.querySelector("header");
+        if (header) {
+            document.documentElement.style.setProperty(
+                "--header-h",
+                header.offsetHeight + "px"
+            );
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        syncHeaderHeight();
+        window.addEventListener("resize", syncHeaderHeight);
+
+        document
+            .querySelectorAll<HTMLAnchorElement>("[data-section-link]")
+            .forEach((link) => {
+                const href = link.getAttribute("href");
+                if (href?.startsWith("#") && !document.querySelector(href)) {
+                    link.style.display = "none";
+                    const sep = link.nextElementSibling;
+                    if (sep?.textContent?.trim() === "·") {
+                        (sep as HTMLElement).style.display = "none";
+                    }
+                }
+            });
+    });
+</script>
