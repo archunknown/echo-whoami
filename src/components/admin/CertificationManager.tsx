@@ -39,7 +39,7 @@ export default function CertificationManager() {
     const [titleEn, setTitleEn] = useState('');
     const [titleEs, setTitleEs] = useState('');
     const [issuer, setIssuer] = useState('');
-    const [issueDate, setIssueDate] = useState('');
+    const [issueYear, setIssueYear] = useState('');
     const [credentialUrl, setCredentialUrl] = useState('');
     const [isPublished, setIsPublished] = useState(false);
 
@@ -64,7 +64,7 @@ export default function CertificationManager() {
         setEditLang('en');
         setTitleEn(''); setTitleEs('');
         setIssuer('');
-        setIssueDate('');
+        setIssueYear('');
         setCredentialUrl('');
         setIsPublished(false);
     };
@@ -77,7 +77,7 @@ export default function CertificationManager() {
         const titleObj = cert.title as { en?: string; es?: string } || {};
         setTitleEn(titleObj.en || ''); setTitleEs(titleObj.es || '');
         setIssuer(cert.issuer || '');
-        setIssueDate(cert.issue_date ? cert.issue_date.split('T')[0] : '');
+        setIssueYear(cert.issue_date ? String(new Date(cert.issue_date).getFullYear()) : '');
         setCredentialUrl(cert.credential_url || '');
         setIsPublished(cert.is_published || false);
         setIsFormOpen(true);
@@ -106,7 +106,7 @@ export default function CertificationManager() {
                 issuer,
                 credential_url: credentialUrl.trim() || null,
                 is_published: isPublished,
-                issue_date: issueDate || null,
+                issue_date: issueYear ? `${issueYear}-01-01` : null,
                 order_index: editingId
                     ? (certifications.find(c => c.id === editingId)?.order_index ?? certifications.length)
                     : certifications.length,
@@ -247,8 +247,8 @@ export default function CertificationManager() {
                                 <input type="text" value={issuer} onChange={e => setIssuer(e.target.value)} style={inputStyle} />
                             </div>
                             <div>
-                                <label style={labelStyle}>Issue Date</label>
-                                <input type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)} style={inputStyle} />
+                                <label style={labelStyle}>Issue Year</label>
+                                <input type="number" value={issueYear} onChange={e => setIssueYear(e.target.value)} placeholder="e.g. 2024" min="1980" max="2099" style={inputStyle} />
                             </div>
                         </div>
                     )}

@@ -37,7 +37,7 @@ const { certification, index, t } = Astro.props;
                             <span>
                                 {new Date(
                                     certification.issue_date
-                                ).toLocaleDateString()}
+                                ).getFullYear()}
                             </span>
                         </>
                     )
