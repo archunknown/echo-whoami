@@ -2,7 +2,7 @@
 interface Technology {
     id: string;
     name: string;
-    category: string;
+    category?: string | null;
     color?: string | null;
     icon_slug?: string | null;
     logo_url?: string | null;
@@ -12,57 +12,44 @@ interface Props {
 }
 const { technologies } = Astro.props;
 
-const groupedTech =
-    technologies?.reduce((acc, tech) => {
-        const cat = tech.category || "Other";
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(tech);
-        return acc;
-    }, {} as Record<string, Technology[]>) || {};
+// Deterministic vertical offsets and animation delays for organic feel
+const offsets = [0, 8, -4, 12, -8, 4, 10, -6, 2, 8, -2, 6, -10, 5, -5, 9];
+const delays =  [0, 0.7, 1.4, 2.1, 0.35, 1.05, 1.75, 2.45, 0.5, 1.2, 1.9, 0.15, 0.9, 1.6, 0.25, 1.3];
 ---
 
-<div class="flex flex-col gap-10 reveal-hidden">
+<div class="flex flex-wrap justify-center items-center gap-3 md:gap-4 reveal-hidden">
     {
-        Object.entries(groupedTech).map(([category, techs]) => (
-            <div class="flex flex-col gap-4">
-                <p
-                    class="font-mono text-xs tracking-widest"
-                    style="color: var(--text-muted); border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;"
-                >
-                    {category}
-                </p>
-                <div class="flex flex-wrap gap-3 md:gap-2">
-                    {techs.map((tech) => {
-                        const colorHex = (tech.color || '#888888').replace('#', '');
-                        const iconSrc = tech.logo_url
-                            ? tech.logo_url
-                            : tech.icon_slug
-                            ? `https://cdn.simpleicons.org/${tech.icon_slug}/${colorHex}`
-                            : null;
+        technologies.map((tech, i) => {
+            const colorHex = (tech.color || "#888888").replace("#", "");
+            const iconSrc = tech.logo_url
+                ? tech.logo_url
+                : tech.icon_slug
+                ? `https://cdn.simpleicons.org/${tech.icon_slug}/${colorHex}`
+                : null;
 
-                        return (
-                            <span
-                                class="inline-flex items-center gap-2 font-mono text-xs px-4 py-2 md:px-3 md:py-1.5 transition-all duration-200 hover:text-(--text-primary) hover:border-(--text-secondary)"
-                                style="color: var(--text-secondary); border: 1px solid var(--border-default);"
-                                title={tech.name}
-                            >
-                                {iconSrc && (
-                                    <img
-                                        src={iconSrc}
-                                        alt={tech.name}
-                                        width="14"
-                                        height="14"
-                                        loading="lazy"
-                                        style="object-fit: contain; flex-shrink: 0; opacity: 0.75;"
-                                        onerror="this.style.display='none'"
-                                    />
-                                )}
-                                {tech.name}
-                            </span>
-                        );
-                    })}
-                </div>
-            </div>
-        ))
+            const offset = offsets[i % offsets.length];
+            const delay = delays[i % delays.length];
+
+            return (
+                <span
+                    class="stack-badge inline-flex items-center gap-2 font-mono text-xs px-4 py-2 md:px-3 md:py-1.5 transition-all duration-300 hover:text-(--text-primary) hover:border-(--text-secondary)"
+                    style={`margin-top: ${offset}px; animation-delay: ${delay}s; color: var(--text-secondary); border: 1px solid var(--border-default);`}
+                    title={tech.name}
+                >
+                    {iconSrc && (
+                        <img
+                            src={iconSrc}
+                            alt={tech.name}
+                            width="14"
+                            height="14"
+                            loading="lazy"
+                            style="object-fit: contain; flex-shrink: 0; opacity: 0.75;"
+                            onerror="this.style.display='none'"
+                        />
+                    )}
+                    {tech.name}
+                </span>
+            );
+        })
     }
 </div>
