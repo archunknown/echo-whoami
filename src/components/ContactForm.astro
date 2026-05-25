@@ -1,5 +1,20 @@
 ---
-const { t, sectionLabel } = Astro.props;
+interface Props {
+    t: {
+        title?: string;
+        nameLabel?: string;
+        emailLabel?: string;
+        messageLabel?: string;
+        submitText?: string;
+        successMessage?: string;
+        errorMessage?: string;
+    };
+    sectionLabel?: string;
+    linkedinUrl?: string;
+    githubUrl?: string;
+    emailUrl?: string;
+}
+const { t, sectionLabel, linkedinUrl, githubUrl, emailUrl } = Astro.props;
 ---
 
 <div class="w-full max-w-xl reveal-hidden">
@@ -29,6 +44,50 @@ const { t, sectionLabel } = Astro.props;
                 {t.title || "Get in Touch"}
             </h2>
         </div>
+
+        <!-- Contact channels -->
+        {(linkedinUrl || githubUrl || emailUrl) && (
+            <div class="flex flex-wrap gap-4 pb-2" style="border-bottom: 1px solid var(--border-subtle);">
+                {linkedinUrl && (
+                    <a
+                        href={linkedinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 font-mono text-xs tracking-widest transition-all duration-200 px-4 py-2.5 hover:border-(--text-secondary) hover:text-(--text-primary)"
+                        style="color: var(--text-secondary); border: 1px solid var(--border-default);"
+                    >
+                        LinkedIn ↗
+                    </a>
+                )}
+                {githubUrl && (
+                    <a
+                        href={githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 font-mono text-xs tracking-widest transition-all duration-200 px-4 py-2.5 hover:border-(--text-secondary) hover:text-(--text-primary)"
+                        style="color: var(--text-secondary); border: 1px solid var(--border-default);"
+                    >
+                        GitHub ↗
+                    </a>
+                )}
+                {emailUrl ? (
+                    <a
+                        href={`mailto:${emailUrl}`}
+                        class="inline-flex items-center gap-2 font-mono text-xs tracking-widest transition-all duration-200 px-4 py-2.5 hover:border-(--text-secondary) hover:text-(--text-primary)"
+                        style="color: var(--text-secondary); border: 1px solid var(--border-default);"
+                    >
+                        Email ↗
+                    </a>
+                ) : (
+                    <span
+                        class="inline-flex items-center gap-2 font-mono text-xs tracking-widest px-4 py-2.5"
+                        style="color: var(--text-muted); border: 1px solid var(--border-subtle);"
+                    >
+                        Email ↓
+                    </span>
+                )}
+            </div>
+        )}
 
         <div
             id="error-message"
