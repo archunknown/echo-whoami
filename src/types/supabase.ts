@@ -135,6 +135,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: Json | null
+          contact_email: string | null
           display_name: string | null
           github_url: string | null
           linkedin_url: string | null
@@ -145,6 +146,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: Json | null
+          contact_email?: string | null
           display_name?: string | null
           github_url?: string | null
           linkedin_url?: string | null
@@ -155,6 +157,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: Json | null
+          contact_email?: string | null
           display_name?: string | null
           github_url?: string | null
           linkedin_url?: string | null

@@ -181,7 +181,7 @@ export async function getAllTechnologies() {
     const { data, error } = await supabase
         .from('technologies')
         .select('*')
-        .order('category', { ascending: true });
+        .order('name', { ascending: true });
 
     if (error) {
         console.error('Error fetching all technologies:', error);
