@@ -63,6 +63,7 @@ export default function EducationManager() {
     const [isCurrent, setIsCurrent] = useState(false);
     const [credentialUrl, setCredentialUrl] = useState('');
     const [isPublished, setIsPublished] = useState(true);
+    const [issueYear, setIssueYear] = useState('');
 
     useEffect(() => { load(); }, []);
 
@@ -91,6 +92,7 @@ export default function EducationManager() {
         setIsCurrent(false);
         setCredentialUrl('');
         setIsPublished(true);
+        setIssueYear('');
     };
 
     const handleNew = () => { resetForm(); setIsFormOpen(true); };
@@ -110,6 +112,7 @@ export default function EducationManager() {
         setIsCurrent(entry.is_current || false);
         setCredentialUrl(entry.credential_url || '');
         setIsPublished(entry.is_published ?? true);
+        setIssueYear(entry.issue_year ? String(entry.issue_year) : '');
         setIsFormOpen(true);
     };
 
@@ -126,20 +129,24 @@ export default function EducationManager() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!titleEn.trim()) { setError('Title (EN) is required.'); return; }
-        if (!institutionEn.trim()) { setError('Institution (EN) is required.'); return; }
+        if (!institutionEn.trim()) { setError('Issuer / Institution (EN) is required.'); return; }
+
+        const isCertification = category === 'certification';
 
         setIsSaving(true);
         setError(null);
         try {
+            const parsedYear = issueYear ? parseInt(issueYear, 10) : null;
             const data: any = {
                 title: { en: titleEn, es: titleEs },
-                institution: { en: institutionEn, es: institutionEs },
-                description: descriptionEn || descriptionEs ? { en: descriptionEn, es: descriptionEs } : null,
+                institution: { en: institutionEn, es: isCertification ? institutionEn : institutionEs },
+                description: isCertification ? null : (descriptionEn || descriptionEs ? { en: descriptionEn, es: descriptionEs } : null),
                 category,
-                start_date: startDate || null,
-                end_date: isCurrent ? null : (endDate || null),
-                is_current: isCurrent,
-                credential_url: credentialUrl.trim() || null,
+                start_date: isCertification ? null : (startDate || null),
+                end_date: isCertification ? null : (isCurrent ? null : (endDate || null)),
+                is_current: isCertification ? false : isCurrent,
+                credential_url: isCertification ? null : (credentialUrl.trim() || null),
+                issue_year: isCertification ? parsedYear : null,
                 is_published: isPublished,
                 order_index: editingId
                     ? (entries.find(e => e.id === editingId)?.order_index ?? entries.length)
@@ -215,6 +222,7 @@ export default function EducationManager() {
 
     if (isFormOpen) {
         const isEs = editLang === 'es';
+        const isCertification = category === 'certification';
         return (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderTop: 'none', padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -291,51 +299,83 @@ export default function EducationManager() {
                         />
                     </div>
 
-                    {/* Institution */}
+                    {/* Institution / Issuer */}
                     <div>
-                        <label style={labelStyle}>Institution {isEs ? '(ES)' : '(EN) *'}</label>
+                        <label style={labelStyle}>
+                            {isCertification ? 'Issuer *' : `Institution ${isEs ? '(ES)' : '(EN) *'}`}
+                        </label>
                         <input
                             type="text"
-                            value={isEs ? institutionEs : institutionEn}
-                            onChange={e => isEs ? setInstitutionEs(e.target.value) : setInstitutionEn(e.target.value)}
-                            placeholder={isEs ? institutionEn || 'Translation of EN institution...' : ''}
+                            value={isCertification ? institutionEn : (isEs ? institutionEs : institutionEn)}
+                            onChange={e => isCertification ? setInstitutionEn(e.target.value) : (isEs ? setInstitutionEs(e.target.value) : setInstitutionEn(e.target.value))}
+                            placeholder={(!isCertification && isEs) ? institutionEn || 'Translation of EN institution...' : ''}
                             style={inputStyle}
                         />
+                        {isCertification && (
+                            <p style={{ fontFamily: 'monospace', fontSize: '0.58rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                Language-neutral — same value used for EN and ES.
+                            </p>
+                        )}
                     </div>
 
-                    {/* Description */}
-                    <div>
-                        <label style={labelStyle}>Description {isEs ? '(ES)' : '(EN)'}</label>
-                        <textarea
-                            value={isEs ? descriptionEs : descriptionEn}
-                            onChange={e => isEs ? setDescriptionEs(e.target.value) : setDescriptionEn(e.target.value)}
-                            placeholder={isEs ? descriptionEn || 'Translation of EN description...' : ''}
-                            rows={2}
-                            style={{ ...inputStyle, resize: 'vertical' }}
-                        />
-                    </div>
-
-                    {/* Dates */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    {/* Issue Year — only for certifications */}
+                    {isCertification && (
                         <div>
-                            <label style={labelStyle}>Start Date</label>
-                            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
+                            <label style={labelStyle}>Issue Year</label>
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                value={issueYear}
+                                onChange={e => {
+                                    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+                                    setIssueYear(v);
+                                }}
+                                placeholder="e.g. 2024"
+                                maxLength={4}
+                                style={inputStyle}
+                            />
                         </div>
-                        <div>
-                            <label style={labelStyle}>End Date</label>
-                            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} disabled={isCurrent} style={{ ...inputStyle, opacity: isCurrent ? 0.4 : 1 }} />
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.1rem' }}>
-                            <Toggle checked={isCurrent} onChange={setIsCurrent} />
-                            <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>present</span>
-                        </div>
-                    </div>
+                    )}
 
-                    {/* Credential URL */}
-                    <div>
-                        <label style={labelStyle}>Credential URL</label>
-                        <input type="url" value={credentialUrl} onChange={e => setCredentialUrl(e.target.value)} placeholder="https://..." style={inputStyle} />
-                    </div>
+                    {/* Description — hidden for certifications */}
+                    {!isCertification && (
+                        <div>
+                            <label style={labelStyle}>Description {isEs ? '(ES)' : '(EN)'}</label>
+                            <textarea
+                                value={isEs ? descriptionEs : descriptionEn}
+                                onChange={e => isEs ? setDescriptionEs(e.target.value) : setDescriptionEn(e.target.value)}
+                                placeholder={isEs ? descriptionEn || 'Translation of EN description...' : ''}
+                                rows={2}
+                                style={{ ...inputStyle, resize: 'vertical' }}
+                            />
+                        </div>
+                    )}
+
+                    {/* Dates — hidden for certifications */}
+                    {!isCertification && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label style={labelStyle}>Start Date</label>
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={inputStyle} />
+                            </div>
+                            <div>
+                                <label style={labelStyle}>End Date</label>
+                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} disabled={isCurrent} style={{ ...inputStyle, opacity: isCurrent ? 0.4 : 1 }} />
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.1rem' }}>
+                                <Toggle checked={isCurrent} onChange={setIsCurrent} />
+                                <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>present</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Credential URL — hidden for certifications */}
+                    {!isCertification && (
+                        <div>
+                            <label style={labelStyle}>Credential URL</label>
+                            <input type="url" value={credentialUrl} onChange={e => setCredentialUrl(e.target.value)} placeholder="https://..." style={inputStyle} />
+                        </div>
+                    )}
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
                         <button type="button" onClick={() => setIsFormOpen(false)} style={{ padding: '0.6rem 1.5rem', background: 'transparent', border: '1px solid var(--border-default)', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.7rem', cursor: 'pointer', borderRadius: '2px' }}>cancel</button>

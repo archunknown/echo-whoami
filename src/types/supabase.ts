@@ -26,42 +26,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      certifications: {
-        Row: {
-          created_at: string
-          credential_url: string | null
-          id: string
-          is_published: boolean | null
-          issue_date: string | null
-          issuer: string
-          order_index: number | null
-          title: Json
-          category: EducationCategory | null
-        }
-        Insert: {
-          created_at?: string
-          credential_url?: string | null
-          id?: string
-          is_published?: boolean | null
-          issue_date?: string | null
-          issuer: string
-          order_index?: number | null
-          title: Json
-          category?: EducationCategory | null
-        }
-        Update: {
-          created_at?: string
-          credential_url?: string | null
-          id?: string
-          is_published?: boolean | null
-          issue_date?: string | null
-          issuer?: string
-          order_index?: number | null
-          title?: Json
-          category?: EducationCategory | null
-        }
-        Relationships: []
-      }
       contact_messages: {
         Row: {
           created_at: string
@@ -99,6 +63,7 @@ export type Database = {
           credential_url: string | null
           is_published: boolean | null
           order_index: number | null
+          issue_year: number | null
           created_at: string
         }
         Insert: {
@@ -113,6 +78,7 @@ export type Database = {
           credential_url?: string | null
           is_published?: boolean | null
           order_index?: number | null
+          issue_year?: number | null
           created_at?: string
         }
         Update: {
@@ -127,6 +93,7 @@ export type Database = {
           credential_url?: string | null
           is_published?: boolean | null
           order_index?: number | null
+          issue_year?: number | null
           created_at?: string
         }
         Relationships: []

@@ -3,7 +3,6 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
-import CertificationCard from "../components/CertificationCard.astro";
 import StackSection from "../components/StackSection.astro";
 import ContactForm from "../components/ContactForm.astro";
 import EducationTimeline from "../components/EducationTimeline.astro";
@@ -12,7 +11,6 @@ import {
 	getProfile,
 	getFeaturedProjects,
 	getPublishedProjects,
-	getPublishedCertifications,
 	getAllTechnologies,
 	getPublishedEducation,
 } from "../services/api";
@@ -21,7 +19,6 @@ import { t } from "../utils/i18n";
 const profile = await getProfile();
 const featuredProjects = await getFeaturedProjects();
 const allProjects = await getPublishedProjects();
-const certifications = await getPublishedCertifications();
 const technologies = await getAllTechnologies();
 const educationEntries = await getPublishedEducation();
 
@@ -51,11 +48,6 @@ const translateProject = (project: any) => ({
 const translatedInitialProjects = initialProjects.map(translateProject);
 const translatedRemainingProjects = remainingProjects.map(translateProject);
 
-const translatedCertifications = certifications?.map((cert) => ({
-	...cert,
-	title: t(cert.title, "en"),
-}));
-
 const EDUCATION_CATEGORY_LABELS: Record<string, string> = {
 	university: 'University',
 	technical: 'Technical',
@@ -70,15 +62,13 @@ const translatedEducation = (educationEntries ?? []).map((e: any) => ({
 }));
 const hasEducation = translatedEducation.length > 0;
 
-const showCerts = (translatedCertifications?.length ?? 0) > 0;
 const showStack = (technologies?.length ?? 0) > 0;
 let _sn = 0;
 const sn = (visible = true) => visible ? String(++_sn).padStart(3, '0') : '';
-const numWork     = sn();
-const numCerts    = sn(showCerts);
-const numStack    = sn(showStack);
+const numWork      = sn();
+const numStack     = sn(showStack);
 const numEducation = sn(hasEducation);
-const numContact  = sn();
+const numContact   = sn();
 
 const uiDictionary = {
 	projects: "View Projects",
@@ -88,7 +78,6 @@ const uiDictionary = {
 	architecture: "Architecture",
 	outcome: "Outcome",
 	privateRepo: "Private repository",
-	certificationsTitle: "Certifications",
 	stackTitle: "Tech Stack",
 	viewCredential: "View Credential",
 	contactTitle: "Get in Touch",
@@ -153,7 +142,7 @@ const uiDictionary = {
 
 				{translatedRemainingProjects.length > 0 && (
 					<>
-						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden" id="projects-more">
+						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="projects-more" style="display:none">
 							{translatedRemainingProjects.map((project) => (
 								<ProjectCard project={project} t={uiDictionary} />
 							))}
@@ -176,45 +165,13 @@ const uiDictionary = {
 				const more = document.getElementById('projects-more');
 				if (btn && more) {
 					btn.addEventListener('click', () => {
-						more.classList.remove('hidden');
+						more.style.display = '';
 						btn.parentElement?.remove();
 					});
 				}
 			</script>
 
-			{
-				translatedCertifications && translatedCertifications.length > 0 && (
-					<section
-						id="certifications"
-						class="max-w-5xl mx-auto px-4 sm:px-6 py-20 w-full flex flex-col gap-10 reveal-hidden"
-						style="border-top: 1px solid var(--border-subtle);"
-					>
-						<div class="flex flex-col gap-2">
-							<p
-								class="font-mono text-xs tracking-widest"
-								style="color: var(--text-muted);"
-							>
-								{numCerts} — certifications
-							</p>
-							<h2
-								class="text-3xl md:text-4xl font-black tracking-tight"
-								style="color: var(--text-primary);"
-							>
-								{uiDictionary.certificationsTitle}
-							</h2>
-						</div>
-						<div class="flex flex-col">
-							{translatedCertifications.map((cert, i) => (
-								<CertificationCard
-									certification={cert}
-									index={i}
-									t={uiDictionary}
-								/>
-							))}
-						</div>
-					</section>
-				)
-			}
+
 
 			{
 				technologies && technologies.length > 0 && (

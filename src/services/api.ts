@@ -4,8 +4,6 @@ import type { Database } from '../types/supabase';
 type ProfileUpdate = Database['public']['Tables']['profile']['Update'];
 type ProjectUpdate = Database['public']['Tables']['projects']['Update'];
 type ProjectInsert = Database['public']['Tables']['projects']['Insert'];
-type CertificationUpdate = Database['public']['Tables']['certifications']['Update'];
-type CertificationInsert = Database['public']['Tables']['certifications']['Insert'];
 type TechnologyUpdate = Database['public']['Tables']['technologies']['Update'];
 type TechnologyInsert = Database['public']['Tables']['technologies']['Insert'];
 type ContactMessageInsert = Database['public']['Tables']['contact_messages']['Insert'];
@@ -234,77 +232,6 @@ export async function deleteTechnology(id: string) {
     }
 }
 
-export async function getAllCertifications() {
-    const { data, error } = await supabase
-        .from('certifications')
-        .select('*')
-        .order('order_index', { ascending: true });
-
-    if (error) {
-        console.error('Error fetching all certifications:', error);
-        throw error;
-    }
-
-    return data;
-}
-
-export async function getPublishedCertifications() {
-    const { data, error } = await supabase
-        .from('certifications')
-        .select('*')
-        .eq('is_published', true)
-        .order('order_index', { ascending: true });
-
-    if (error) {
-        console.error('Error fetching published certifications:', error);
-        throw error;
-    }
-
-    return data;
-}
-
-export async function createCertification(certification: CertificationInsert) {
-    const { data, error } = await supabase
-        .from('certifications')
-        .insert(certification)
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error creating certification:', error);
-        throw error;
-    }
-
-    return data;
-}
-
-export async function updateCertification(id: string, updates: CertificationUpdate) {
-    const { data, error } = await supabase
-        .from('certifications')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error updating certification:', error);
-        throw error;
-    }
-
-    return data;
-}
-
-export async function deleteCertification(id: string) {
-    const { error } = await supabase
-        .from('certifications')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error deleting certification:', error);
-        throw error;
-    }
-}
 
 export async function uploadImage(file: File, bucket: string, path: string) {
     const { data, error } = await supabase.storage

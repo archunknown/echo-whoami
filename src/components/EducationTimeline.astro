@@ -9,6 +9,7 @@ interface Entry {
     end_date?: string | null;
     is_current?: boolean | null;
     credential_url?: string | null;
+    issue_year?: number | null;
 }
 
 interface Props {
@@ -46,6 +47,13 @@ const yr = (e: Entry): string | null => {
           : null;
     return s ? (end ? `${s} — ${end}` : `${s}`) : null;
 };
+
+const displayYear = (e: Entry): string | null => {
+    if (e.category === 'certification') {
+        return e.issue_year ? String(e.issue_year) : null;
+    }
+    return yr(e);
+};
 ---
 
 <div class="tl-outer">
@@ -72,10 +80,10 @@ const yr = (e: Entry): string | null => {
                                                 </p>
                                                 <p class="tl-entry-meta">
                                                     {e.institution}
-                                                    {yr(e) && (
+                                                    {displayYear(e) && (
                                                         <span class="tl-yr">
                                                             {" "}
-                                                            · {yr(e)}
+                                                            · {displayYear(e)}
                                                         </span>
                                                     )}
                                                 </p>
@@ -96,6 +104,7 @@ const yr = (e: Entry): string | null => {
                                                 )}
                                             </div>
                                         ))}
+                                        <div class="tl-fade" aria-hidden="true"></div>
                                     </div>
                                 </div>
                                 <div class="tl-stem tl-stem-above" />
@@ -143,10 +152,10 @@ const yr = (e: Entry): string | null => {
                                                 </p>
                                                 <p class="tl-entry-meta">
                                                     {e.institution}
-                                                    {yr(e) && (
+                                                    {displayYear(e) && (
                                                         <span class="tl-yr">
                                                             {" "}
-                                                            · {yr(e)}
+                                                            · {displayYear(e)}
                                                         </span>
                                                     )}
                                                 </p>
@@ -167,6 +176,7 @@ const yr = (e: Entry): string | null => {
                                                 )}
                                             </div>
                                         ))}
+                                        <div class="tl-fade" aria-hidden="true"></div>
                                     </div>
                                 </div>
                             </>
@@ -344,11 +354,19 @@ const yr = (e: Entry): string | null => {
         box-shadow:
             0 2px 12px rgba(0, 0, 0, 0.4),
             0 8px 32px rgba(0, 0, 0, 0.3);
+        /* Fixed layout */
+        display: flex;
+        flex-direction: column;
+        max-height: 280px;
+        overflow: hidden;
+        flex-shrink: 0;
+        cursor: pointer;
+        /* Transitions */
         transition:
+            max-height 0.42s cubic-bezier(0.4, 0, 0.2, 1),
             border-color 0.25s ease,
             box-shadow 0.25s ease,
             transform 0.25s ease;
-        flex-shrink: 0;
     }
     .tl-card:hover {
         border-color: rgba(139, 0, 0, 0.45);
@@ -357,6 +375,12 @@ const yr = (e: Entry): string | null => {
             0 0 20px rgba(139, 0, 0, 0.1),
             0 8px 40px rgba(0, 0, 0, 0.5);
         transform: translateY(-2px);
+    }
+    .tl-card--expanded {
+        max-height: 1200px;
+    }
+    .tl-card--expanded:hover {
+        transform: none;
     }
 
     /* Category cap */
@@ -380,6 +404,30 @@ const yr = (e: Entry): string | null => {
         display: flex;
         flex-direction: column;
         gap: 0.7rem;
+        flex: 1;
+        position: relative;
+        min-height: 0;
+    }
+
+    /* Gradient fade overlay */
+    .tl-fade {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        margin-top: -56px;
+        background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            var(--bg-card) 100%
+        );
+        pointer-events: none;
+        transition: opacity 0.28s ease;
+        flex-shrink: 0;
+    }
+    .tl-card--expanded .tl-fade {
+        opacity: 0;
     }
     .tl-entry {
         display: flex;
@@ -412,10 +460,6 @@ const yr = (e: Entry): string | null => {
         color: var(--text-muted);
         line-height: 1.5;
         margin-top: 0.2rem;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
     }
     .tl-entry-cred {
         font-family: monospace;
@@ -431,3 +475,13 @@ const yr = (e: Entry): string | null => {
         opacity: 0.9;
     }
 </style>
+
+<script>
+    document.querySelectorAll<HTMLElement>('.tl-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Don't toggle when clicking a link inside the card
+            if ((e.target as Element).closest('a')) return;
+            card.classList.toggle('tl-card--expanded');
+        });
+    });
+</script>

@@ -3,7 +3,6 @@ import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import Hero from "../../components/Hero.astro";
 import ProjectCard from "../../components/ProjectCard.astro";
-import CertificationCard from "../../components/CertificationCard.astro";
 import StackSection from "../../components/StackSection.astro";
 import ContactForm from "../../components/ContactForm.astro";
 import EducationTimeline from "../../components/EducationTimeline.astro";
@@ -12,7 +11,6 @@ import {
     getProfile,
     getFeaturedProjects,
     getPublishedProjects,
-    getPublishedCertifications,
     getAllTechnologies,
     getPublishedEducation,
 } from "../../services/api";
@@ -21,7 +19,6 @@ import { t } from "../../utils/i18n";
 const profile = await getProfile();
 const featuredProjects = await getFeaturedProjects().catch(() => []);
 const allProjects = await getPublishedProjects().catch(() => []);
-const certifications = await getPublishedCertifications().catch(() => []);
 const technologies = await getAllTechnologies().catch(() => []);
 const educationEntries = await getPublishedEducation().catch(() => []);
 
@@ -34,10 +31,14 @@ const translatedProfile = profile
     : null;
 
 const hasFeatured = (featuredProjects?.length ?? 0) > 0;
-const initialProjects = hasFeatured ? featuredProjects : (allProjects?.slice(0, 4) ?? []);
+const initialProjects = hasFeatured
+    ? featuredProjects
+    : (allProjects?.slice(0, 4) ?? []);
 const remainingProjects = hasFeatured
-    ? allProjects?.filter(p => !featuredProjects?.find(f => f.id === p.id)) ?? []
-    : allProjects?.slice(4) ?? [];
+    ? (allProjects?.filter(
+          (p) => !featuredProjects?.find((f) => f.id === p.id),
+      ) ?? [])
+    : (allProjects?.slice(4) ?? []);
 
 const translateProject = (project: any) => ({
     ...project,
@@ -51,34 +52,27 @@ const translateProject = (project: any) => ({
 const translatedInitialProjects = initialProjects.map(translateProject);
 const translatedRemainingProjects = remainingProjects.map(translateProject);
 
-const translatedCertifications = certifications?.map((cert) => ({
-    ...cert,
-    title: t(cert.title, "es"),
-}));
-
 const EDUCATION_CATEGORY_LABELS: Record<string, string> = {
-    university: 'Universidad',
-    technical: 'Técnica',
-    certification: 'Certificación',
-    complementary: 'Complementario',
+    university: "Universidad",
+    technical: "Técnica",
+    certification: "Certificación",
+    complementary: "Complementario",
 };
 const translatedEducation = (educationEntries ?? []).map((e: any) => ({
     ...e,
-    title: t(e.title, 'es'),
-    institution: t(e.institution, 'es'),
-    description: e.description ? t(e.description, 'es') : null,
+    title: t(e.title, "es"),
+    institution: t(e.institution, "es"),
+    description: e.description ? t(e.description, "es") : null,
 }));
 const hasEducation = translatedEducation.length > 0;
 
-const showCerts = (translatedCertifications?.length ?? 0) > 0;
 const showStack = (technologies?.length ?? 0) > 0;
 let _sn = 0;
-const sn = (visible = true) => visible ? String(++_sn).padStart(3, '0') : '';
-const numWork      = sn();
-const numCerts     = sn(showCerts);
-const numStack     = sn(showStack);
+const sn = (visible = true) => (visible ? String(++_sn).padStart(3, "0") : "");
+const numWork = sn();
+const numStack = sn(showStack);
 const numEducation = sn(hasEducation);
-const numContact   = sn();
+const numContact = sn();
 
 const uiDictionary = {
     projects: "Ver proyectos",
@@ -88,7 +82,6 @@ const uiDictionary = {
     architecture: "Arquitectura",
     outcome: "Resultado",
     privateRepo: "Privado",
-    certificationsTitle: "Certificaciones",
     stackTitle: "Stack Tecnológico",
     viewCredential: "Ver Credencial",
     contactTitle: "Ponte en Contacto",
@@ -96,8 +89,10 @@ const uiDictionary = {
     contactEmail: "Correo Electrónico",
     contactMessage: "Tu Mensaje",
     contactSubmit: "Enviar Mensaje",
-    contactSuccess: "¡Mensaje enviado correctamente! Me pondré en contacto pronto.",
-    contactError: "Hubo un error al enviar el mensaje. Por favor intenta de nuevo.",
+    contactSuccess:
+        "¡Mensaje enviado correctamente! Me pondré en contacto pronto.",
+    contactError:
+        "Hubo un error al enviar el mensaje. Por favor intenta de nuevo.",
     showMore: "Ver todos los proyectos",
     educationTitle: "Educación",
 };
@@ -143,7 +138,10 @@ const uiDictionary = {
                     </h2>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="projects-initial-es">
+                <div
+                    class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                    id="projects-initial-es"
+                >
                     {
                         translatedInitialProjects.map((project) => (
                             <ProjectCard project={project} t={uiDictionary} />
@@ -151,70 +149,46 @@ const uiDictionary = {
                     }
                 </div>
 
-                {translatedRemainingProjects.length > 0 && (
-                    <>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden" id="projects-more-es">
-                            {translatedRemainingProjects.map((project) => (
-                                <ProjectCard project={project} t={uiDictionary} />
-                            ))}
-                        </div>
-                        <div class="flex justify-center">
-                            <button
-                                id="show-more-btn-es"
-                                class="font-mono text-xs tracking-widest px-8 py-3 transition-all duration-200"
-                                style="border: 1px solid var(--border-default); color: var(--text-secondary); background: transparent;"
+                {
+                    translatedRemainingProjects.length > 0 && (
+                        <>
+                            <div
+                                class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                                id="projects-more-es"
+                                style="display:none"
                             >
-                                {uiDictionary.showMore} ({translatedRemainingProjects.length})
-                            </button>
-                        </div>
-                    </>
-                )}
+                                {translatedRemainingProjects.map((project) => (
+                                    <ProjectCard
+                                        project={project}
+                                        t={uiDictionary}
+                                    />
+                                ))}
+                            </div>
+                            <div class="flex justify-center">
+                                <button
+                                    id="show-more-btn-es"
+                                    class="font-mono text-xs tracking-widest px-8 py-3 transition-all duration-200"
+                                    style="border: 1px solid var(--border-default); color: var(--text-secondary); background: transparent;"
+                                >
+                                    {uiDictionary.showMore} (
+                                    {translatedRemainingProjects.length})
+                                </button>
+                            </div>
+                        </>
+                    )
+                }
             </section>
 
             <script>
-                const btn = document.getElementById('show-more-btn-es');
-                const more = document.getElementById('projects-more-es');
+                const btn = document.getElementById("show-more-btn-es");
+                const more = document.getElementById("projects-more-es");
                 if (btn && more) {
-                    btn.addEventListener('click', () => {
-                        more.classList.remove('hidden');
+                    btn.addEventListener("click", () => {
+                        more.style.display = '';
                         btn.parentElement?.remove();
                     });
                 }
             </script>
-
-            {
-                translatedCertifications && translatedCertifications.length > 0 && (
-                    <section
-                        id="certificaciones"
-                        class="max-w-5xl mx-auto px-4 sm:px-6 py-20 w-full flex flex-col gap-10 reveal-hidden"
-                        style="border-top: 1px solid var(--border-subtle);"
-                    >
-                        <div class="flex flex-col gap-2">
-                            <p
-                                class="font-mono text-xs tracking-widest"
-                                style="color: var(--text-muted);"
-                            >
-                                {numCerts} — certificaciones
-                            </p>
-                            <h2
-                                class="text-3xl md:text-4xl font-black tracking-tight"
-                                style="color: var(--text-primary);"
-                            >
-                                {uiDictionary.certificationsTitle}
-                            </h2>
-                        </div>
-                        <div class="flex flex-col">
-                            {translatedCertifications.map((cert, i) => (
-                                <CertificationCard
-                                    certification={cert}
-                                    index={i}
-                                    t={uiDictionary}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )
-            }
 
             {
                 technologies && technologies.length > 0 && (
@@ -250,10 +224,16 @@ const uiDictionary = {
                         style="border-top: 1px solid var(--border-subtle);"
                     >
                         <div class="flex flex-col gap-2 mb-12">
-                            <p class="font-mono text-xs tracking-widest" style="color: var(--text-muted);">
+                            <p
+                                class="font-mono text-xs tracking-widest"
+                                style="color: var(--text-muted);"
+                            >
                                 {numEducation} — Experiencia y Formacion
                             </p>
-                            <h2 class="text-3xl md:text-4xl font-black tracking-tight" style="color: var(--text-primary);">
+                            <h2
+                                class="text-3xl md:text-4xl font-black tracking-tight"
+                                style="color: var(--text-primary);"
+                            >
                                 {uiDictionary.educationTitle}
                             </h2>
                         </div>

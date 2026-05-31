@@ -32,17 +32,7 @@ section[id] {
     --color-accent-glow: rgba(139, 0, 0, 0.08);
 }
 
-@media (pointer: fine) {
-    * {
-        cursor: none !important;
-    }
-}
 
-@media (pointer: coarse) {
-    #cursor-dot {
-        display: none;
-    }
-}
 
 body {
     background-color: var(--bg-primary);
@@ -52,27 +42,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Custom Cursor ──────────────────────────────────────── */
-#cursor-dot {
-    position: fixed;
-    pointer-events: none;
-    z-index: 9999;
-    top: 0;
-    left: 0;
-    width: 5px;
-    height: 5px;
-    background: var(--color-accent-bright);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 6px 1px rgba(192, 57, 43, 0.5);
-    will-change: transform;
-    transition: width 0.18s ease, height 0.18s ease, opacity 0.18s ease;
-}
 
-body.cursor-clicking #cursor-dot {
-    transform: translate(-50%, -50%) scale(1.8);
-    box-shadow: 0 0 10px 2px rgba(192, 57, 43, 0.7);
-}
 
 ::-webkit-scrollbar {
     width: 3px;

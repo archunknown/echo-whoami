@@ -3,12 +3,11 @@ import { supabase } from '../../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import Dashboard from './Dashboard';
 import ProjectManager from './ProjectManager';
-import CertificationManager from './CertificationManager';
 import EducationManager from './EducationManager';
 import TechnologyManager from './TechnologyManager';
 import ContactManager from './ContactManager';
 
-type Tab = 'profile' | 'projects' | 'certifications' | 'education' | 'stack' | 'messages';
+type Tab = 'profile' | 'projects' | 'education' | 'stack' | 'messages';
 
 export default function AdminApp() {
     const [session, setSession] = useState<Session | null>(null);
@@ -131,7 +130,6 @@ export default function AdminApp() {
     const TABS: { id: Tab; label: string; badge?: number }[] = [
         { id: 'profile', label: 'profile' },
         { id: 'projects', label: 'projects' },
-        { id: 'certifications', label: 'certifications' },
         { id: 'education', label: 'education' },
         { id: 'stack', label: 'stack' },
         { id: 'messages', label: 'messages', badge: messageCount },
@@ -209,7 +207,6 @@ export default function AdminApp() {
 
             {activeTab === 'profile' && <Dashboard />}
             {activeTab === 'projects' && <ProjectManager />}
-            {activeTab === 'certifications' && <CertificationManager />}
             {activeTab === 'education' && <EducationManager />}
             {activeTab === 'stack' && <TechnologyManager />}
             {activeTab === 'messages' && <ContactManager />}

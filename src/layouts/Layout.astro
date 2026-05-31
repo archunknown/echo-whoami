@@ -51,8 +51,7 @@ const canonicalURL = Astro.url.href;
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     </head>
     <body>
-        <!-- Custom cursor (fine pointer devices only) -->
-        <div id="cursor-dot"></div>
+
 
         <!-- Loading screen — starts dark to avoid white flash -->
         <div
@@ -133,17 +132,7 @@ const canonicalURL = Astro.url.href;
                 }, 1700);
             }
 
-            // ── Custom cursor (fine pointer only) ─────────────────────
-            const dot = document.getElementById("cursor-dot") as HTMLElement | null;
 
-            if (dot && window.matchMedia("(pointer: fine)").matches) {
-                document.addEventListener("mousemove", (e) => {
-                    dot!.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
-                });
-
-                document.addEventListener("mousedown", () => document.body.classList.add("cursor-clicking"));
-                document.addEventListener("mouseup", () => document.body.classList.remove("cursor-clicking"));
-            }
 
             // ── Whoami easter egg ─────────────────────────────────────
             let keyBuffer = "";
