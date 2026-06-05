@@ -165,52 +165,45 @@ const { t, sectionLabel, linkedinUrl, githubUrl, emailUrl } = Astro.props;
 </div>
 
 <script>
-    import { supabase } from "../lib/supabase";
-
-    const form = document.getElementById(
-        "contact-form"
-    ) as HTMLFormElement | null;
-    const successMsg = document.getElementById("success-message");
-    const errorMsg = document.getElementById("error-message");
-    const submitBtn = document.getElementById(
-        "submit-btn"
-    ) as HTMLButtonElement | null;
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
+    const successMsg = document.getElementById('success-message');
+    const errorMsg   = document.getElementById('error-message');
+    const submitBtn  = document.getElementById('submit-btn') as HTMLButtonElement | null;
 
     if (form && submitBtn && errorMsg && successMsg) {
-        form.addEventListener("submit", async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             submitBtn.disabled = true;
             const originalText = submitBtn.innerText;
-            submitBtn.innerText = "...";
-            errorMsg.classList.add("hidden");
+            submitBtn.innerText = '...';
+            errorMsg.classList.add('hidden');
 
             const formData = new FormData(form);
-            const name = formData.get("name")?.toString();
-            const email = formData.get("email")?.toString();
-            const message = formData.get("message")?.toString();
+            const payload = {
+                name:    formData.get('name')?.toString().trim()    ?? '',
+                email:   formData.get('email')?.toString().trim()   ?? '',
+                message: formData.get('message')?.toString().trim() ?? '',
+            };
 
-            if (!name || !email || !message) {
-                errorMsg.textContent = "all fields are required.";
-                errorMsg.classList.remove("hidden");
+            try {
+                const res  = await fetch('/api/contact', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(payload),
+                });
+                const data = await res.json();
+
+                if (!res.ok || data.error) {
+                    throw new Error(data.error ?? 'Unknown error');
+                }
+
+                form.classList.add('hidden');
+                successMsg.classList.remove('hidden');
+            } catch (err: any) {
+                errorMsg.textContent = err.message ?? 'error sending message. please try again.';
+                errorMsg.classList.remove('hidden');
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalText;
-                return;
-            }
-
-            const { error } = await supabase
-                .from("contact_messages")
-                .insert([{ name, email, message }]);
-
-            if (error) {
-                console.error(error);
-                errorMsg.textContent =
-                    "error sending message. please try again.";
-                errorMsg.classList.remove("hidden");
-                submitBtn.disabled = false;
-                submitBtn.innerText = originalText;
-            } else {
-                form.classList.add("hidden");
-                successMsg.classList.remove("hidden");
             }
         });
     }

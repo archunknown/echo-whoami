@@ -49,8 +49,7 @@ const translateProject = (project: any) => ({
     outcome: t(project.outcome, "es"),
 });
 
-const translatedInitialProjects = initialProjects.map(translateProject);
-const translatedRemainingProjects = remainingProjects.map(translateProject);
+const allDisplayProjects = [...initialProjects, ...remainingProjects].map(translateProject);
 
 const EDUCATION_CATEGORY_LABELS: Record<string, string> = {
     university: "Universidad",
@@ -141,57 +140,14 @@ const uiDictionary = {
                     </h2>
                 </div>
 
-                <div
-                    class="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                    id="projects-initial-es"
-                >
-                    {
-                        translatedInitialProjects.map((project) => (
+                <div class="projects-outer">
+                    {allDisplayProjects.map((project, i) => (
+                        <div class:list={["project-wrap", { "project-featured": i === 0 }]}>
                             <ProjectCard project={project} t={uiDictionary} />
-                        ))
-                    }
+                        </div>
+                    ))}
                 </div>
-
-                {
-                    translatedRemainingProjects.length > 0 && (
-                        <>
-                            <div
-                                class="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                                id="projects-more-es"
-                                style="display:none"
-                            >
-                                {translatedRemainingProjects.map((project) => (
-                                    <ProjectCard
-                                        project={project}
-                                        t={uiDictionary}
-                                    />
-                                ))}
-                            </div>
-                            <div class="flex justify-center">
-                                <button
-                                    id="show-more-btn-es"
-                                    class="font-mono text-xs tracking-widest px-8 py-3 transition-all duration-200"
-                                    style="border: 1px solid var(--border-default); color: var(--text-secondary); background: transparent;"
-                                >
-                                    {uiDictionary.showMore} (
-                                    {translatedRemainingProjects.length})
-                                </button>
-                            </div>
-                        </>
-                    )
-                }
             </section>
-
-            <script>
-                const btn = document.getElementById("show-more-btn-es");
-                const more = document.getElementById("projects-more-es");
-                if (btn && more) {
-                    btn.addEventListener("click", () => {
-                        more.style.display = '';
-                        btn.parentElement?.remove();
-                    });
-                }
-            </script>
 
             {
                 technologies && technologies.length > 0 && (
