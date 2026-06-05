@@ -27,9 +27,10 @@ const navItems = isEs
     style="border-bottom: 1px solid var(--border-subtle); background: var(--bg-primary);"
     class="w-full sticky top-0 z-50"
 >
-    <!-- Row 1: logo + lang switcher -->
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between py-3">
-        <a href={isEs ? "/es" : "/"} class="flex items-center gap-2">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center gap-4 py-3">
+
+        <!-- Logo -->
+        <a href={isEs ? "/es" : "/"} class="flex items-center gap-2 shrink-0">
             <span
                 class="font-mono text-xs tracking-widest"
                 style="color: var(--text-secondary);"
@@ -43,7 +44,36 @@ const navItems = isEs
             </div>
         </a>
 
-        <nav class="flex items-center gap-1 font-mono text-xs">
+        <!-- Nav centrado, scrollable en mobile -->
+        <div class="nav-scroll flex-1 overflow-x-auto">
+            <nav
+                class="flex items-center justify-center font-mono text-xs"
+                style="min-width: max-content; margin: 0 auto;"
+            >
+                {
+                    navItems.map((item, i) => (
+                        <>
+                            <a
+                                href={item.href}
+                                data-section-link
+                                class="nav-link px-3 py-1 tracking-widest transition-colors duration-200 whitespace-nowrap hover:text-(var(--text-primary))"
+                                style={`color: var(--text-muted); --nav-delay: ${(i * 0.9).toFixed(1)}s`}
+                            >
+                                {item.label}
+                            </a>
+                            {i < navItems.length - 1 && (
+                                <span style="color: var(--border-default);">
+                                    ·
+                                </span>
+                            )}
+                        </>
+                    ))
+                }
+            </nav>
+        </div>
+
+        <!-- Lang switcher -->
+        <nav class="flex items-center gap-1 font-mono text-xs shrink-0">
             <a
                 href="/"
                 class="px-2 py-1 tracking-widest transition-colors duration-200 hover:text-(var(--text-primary))"
@@ -64,37 +94,7 @@ const navItems = isEs
                 ES
             </a>
         </nav>
-    </div>
 
-    <!-- Row 2: section nav, centered, scrollable on mobile -->
-    <div
-        class="nav-scroll w-full overflow-x-auto"
-        style="border-top: 1px solid var(--border-subtle);"
-    >
-        <nav
-            class="flex items-center justify-center font-mono text-xs py-2 px-4"
-            style="min-width: max-content; margin: 0 auto;"
-        >
-            {
-                navItems.map((item, i) => (
-                    <>
-                        <a
-                            href={item.href}
-                            data-section-link
-                            class="nav-link px-3 py-1 tracking-widest transition-colors duration-200 whitespace-nowrap hover:text-(var(--text-primary))"
-                            style={`color: var(--text-muted); --nav-delay: ${(i * 0.9).toFixed(1)}s`}
-                        >
-                            {item.label}
-                        </a>
-                        {i < navItems.length - 1 && (
-                            <span style="color: var(--border-default);">
-                                ·
-                            </span>
-                        )}
-                    </>
-                ))
-            }
-        </nav>
     </div>
 </header>
 

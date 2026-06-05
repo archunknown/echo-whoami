@@ -1,4 +1,6 @@
 ---
+import { marked } from 'marked';
+
 interface Props {
     project: any;
     t: {
@@ -6,10 +8,24 @@ interface Props {
         architecture: string;
         outcome: string;
         privateRepo: string;
+        seeMore: string;
+        close: string;
+        summary: string;
         [key: string]: string;
     };
 }
 const { project, t } = Astro.props;
+const architectureHtml = project.architecture ? marked(project.architecture) : null;
+const modalId = `modal-${project.id}`;
+const triggerId = `trigger-${project.id}`;
+const closeId = `close-${project.id}`;
+const backdropId = `backdrop-${project.id}`;
+
+const hasMetrics =
+    project.metrics &&
+    typeof project.metrics === 'object' &&
+    Object.keys(project.metrics).length > 0;
+const hasDetails = project.problem || project.architecture || project.outcome;
 ---
 
 <article
@@ -60,172 +76,395 @@ const { project, t } = Astro.props;
             </div>
         </div>
 
-        <!-- Summary -->
-        <p
-            class="text-sm leading-relaxed"
-            style="color: var(--text-secondary);"
-        >
-            {project.summary}
-        </p>
-
-        <!-- Details -->
-        <div class="flex flex-col gap-5">
-            {
-                project.problem && (
-                    <div>
-                        <p
-                            class="font-mono text-xs tracking-widest mb-1"
-                            style="color: var(--text-muted);"
-                        >
-                            {t.problem}
-                        </p>
-                        <p
-                            class="text-sm leading-relaxed"
-                            style="color: var(--text-secondary);"
-                        >
-                            {project.problem}
-                        </p>
-                    </div>
-                )
-            }
-            {
-                project.architecture && (
-                    <div>
-                        <p
-                            class="font-mono text-xs tracking-widest mb-1"
-                            style="color: var(--text-muted);"
-                        >
-                            {t.architecture}
-                        </p>
-                        <p
-                            class="text-sm leading-relaxed"
-                            style="color: var(--text-secondary);"
-                        >
-                            {project.architecture}
-                        </p>
-                    </div>
-                )
-            }
-            {
-                project.outcome && (
-                    <div>
-                        <p
-                            class="font-mono text-xs tracking-widest mb-1"
-                            style="color: var(--text-muted);"
-                        >
-                            {t.outcome}
-                        </p>
-                        <p
-                            class="text-sm leading-relaxed"
-                            style="color: var(--text-secondary);"
-                        >
-                            {project.outcome}
-                        </p>
-                    </div>
-                )
-            }
-        </div>
+        <!-- Summary con fade -->
+        {
+            project.summary && (
+                <div class="summary-fade-wrap">
+                    <p
+                        class="text-sm leading-relaxed"
+                        style="color: var(--text-secondary);"
+                    >
+                        {project.summary}
+                    </p>
+                    <div class="summary-fade-gradient" />
+                </div>
+            )
+        }
 
         <!-- Metrics -->
         {
-            project.metrics &&
-                typeof project.metrics === "object" &&
-                Object.keys(project.metrics).length > 0 && (
-                    <div
-                        class="grid grid-cols-2 lg:grid-cols-3 gap-5 py-5"
-                        style="border-top: 1px solid var(--border-subtle);"
-                    >
-                        {Object.entries(project.metrics).map(
-                            ([key, value], index, array) => (
-                                <div
-                                    class:list={[
-                                        "flex flex-col gap-1",
-                                        {
-                                            "col-span-2 lg:col-span-1":
-                                                array.length % 2 !== 0 &&
-                                                index === array.length - 1,
-                                        },
-                                    ]}
+            hasMetrics && (
+                <div
+                    class="grid grid-cols-2 lg:grid-cols-3 gap-4 py-4"
+                    style="border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);"
+                >
+                    {Object.entries(project.metrics).map(
+                        ([key, value], index, array) => (
+                            <div
+                                class:list={[
+                                    'flex flex-col gap-1',
+                                    {
+                                        'col-span-2 lg:col-span-1':
+                                            array.length % 2 !== 0 &&
+                                            index === array.length - 1,
+                                    },
+                                ]}
+                            >
+                                <span
+                                    class="text-2xl font-black"
+                                    style="color: var(--text-primary);"
                                 >
-                                    <span
-                                        class="text-2xl font-black"
-                                        style="color: var(--text-primary);"
-                                    >
-                                        {String(value)}
-                                    </span>
-                                    <span
-                                        class="font-mono text-xs tracking-widest"
-                                        style="color: var(--text-muted);"
-                                    >
-                                        {key.replace(/_/g, " ")}
-                                    </span>
-                                </div>
-                            )
-                        )}
-                    </div>
-                )
+                                    {String(value)}
+                                </span>
+                                <span
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted);"
+                                >
+                                    {key.replace(/_/g, ' ')}
+                                </span>
+                            </div>
+                        ),
+                    )}
+                </div>
+            )
         }
 
-        <!-- Footer links -->
+        <!-- Footer: links + ver más -->
         <div
-            class="mt-auto pt-5 flex flex-wrap gap-6 sm:gap-5 items-center"
-            style="border-top: 1px solid var(--border-subtle);"
+            class="mt-auto pt-3 flex flex-wrap gap-4 sm:gap-5 items-center justify-between"
         >
-            {project.demo_url && (
-                <a
-                    href={project.demo_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
-                    style="color: var(--text-secondary);"
-                >
-                    demo ↗
-                </a>
-            )}
-            {project.prod_url && (
-                <a
-                    href={project.prod_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
-                    style="color: var(--text-secondary);"
-                >
-                    prod ↗
-                </a>
-            )}
-            {project.custom_link && (
-                <a
-                    href={project.custom_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
-                    style="color: var(--text-secondary);"
-                >
-                    {project.custom_link_label || 'link'} ↗
-                </a>
-            )}
-            {
-                project.is_private
-                    ? (
+            <div class="flex flex-wrap gap-4 sm:gap-5 items-center">
+                {
+                    project.demo_url && (
+                        <a
+                            href={project.demo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+                            style="color: var(--text-secondary);"
+                        >
+                            demo ↗
+                        </a>
+                    )
+                }
+                {
+                    project.prod_url && (
+                        <a
+                            href={project.prod_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+                            style="color: var(--text-secondary);"
+                        >
+                            prod ↗
+                        </a>
+                    )
+                }
+                {
+                    project.custom_link && (
+                        <a
+                            href={project.custom_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+                            style="color: var(--text-secondary);"
+                        >
+                            {project.custom_link_label || 'link'} ↗
+                        </a>
+                    )
+                }
+                {
+                    project.is_private ? (
                         <span
                             class="font-mono text-xs tracking-widest"
                             style="color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 0.125rem 0.5rem;"
                         >
                             🔒 {t.privateRepo}
                         </span>
+                    ) : (
+                        project.repo_url && (
+                            <a
+                                href={project.repo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
+                                style="color: var(--text-secondary);"
+                            >
+                                repo ↗
+                            </a>
+                        )
                     )
-                    : project.repo_url && (
-                        <a
-                            href={project.repo_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-block py-3 px-2 sm:py-0 sm:px-0 -mx-2 sm:mx-0 font-mono text-xs tracking-widest transition-colors duration-200 hover:text-(--text-primary)"
-                            style="color: var(--text-secondary);"
-                        >
-                            repo ↗
-                        </a>
-                    )
+                }
+            </div>
+
+            {
+                hasDetails && (
+                    <button
+                        id={triggerId}
+                        class="font-mono text-xs tracking-widest transition-colors duration-200"
+                        style="color: var(--color-accent); background: none; border: none; cursor: pointer; padding: 0.25rem 0; white-space: nowrap;"
+                    >
+                        {t.seeMore} →
+                    </button>
+                )
             }
         </div>
     </div>
 </article>
+
+<!-- Modal -->
+{
+    hasDetails && (
+        <div id={modalId} class="project-modal" aria-hidden="true">
+            <div id={backdropId} class="modal-backdrop" />
+            <div class="modal-panel" role="dialog" aria-modal="true">
+                <div class="modal-scroll">
+                    <!-- Close -->
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+                        <button
+                            id={closeId}
+                            class="font-mono text-xs tracking-widest modal-close-btn"
+                            aria-label="Close"
+                        >
+                            ✕ {t.close}
+                        </button>
+                    </div>
+
+                    <!-- Cover image -->
+                    {project.cover_image_url && (
+                        <div style="border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; aspect-ratio: 16/9;">
+                            <img
+                                src={project.cover_image_url}
+                                alt={project.title}
+                                style="width: 100%; height: 100%; object-fit: cover;"
+                            />
+                        </div>
+                    )}
+
+                    <!-- Title + badges -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <h2
+                            class="text-2xl font-black tracking-tight"
+                            style="color: var(--text-primary); margin-bottom: 0.75rem;"
+                        >
+                            {project.title}
+                        </h2>
+                        <div class="flex flex-wrap gap-2">
+                            {project.project_technologies?.map((pt: any) => {
+                                const tech = pt.technologies;
+                                if (!tech) return null;
+                                return (
+                                    <span
+                                        class="font-mono text-xs px-2 py-0.5"
+                                        style="color: var(--text-secondary); border: 1px solid var(--border-default);"
+                                    >
+                                        {tech.name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <!-- Sections -->
+                    <div class="flex flex-col gap-5">
+                        {project.summary && (
+                            <div>
+                                <p
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted); margin-bottom: 0.5rem;"
+                                >
+                                    {t.summary}
+                                </p>
+                                <p
+                                    class="text-sm leading-relaxed"
+                                    style="color: var(--text-secondary);"
+                                >
+                                    {project.summary}
+                                </p>
+                            </div>
+                        )}
+
+                        {project.problem && (
+                            <div class="modal-section">
+                                <p
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted); margin-bottom: 0.5rem;"
+                                >
+                                    {t.problem}
+                                </p>
+                                <p
+                                    class="text-sm leading-relaxed"
+                                    style="color: var(--text-secondary);"
+                                >
+                                    {project.problem}
+                                </p>
+                            </div>
+                        )}
+
+                        {architectureHtml && (
+                            <div class="modal-section">
+                                <p
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted); margin-bottom: 0.5rem;"
+                                >
+                                    {t.architecture}
+                                </p>
+                                <div
+                                    class="text-sm leading-relaxed prose-architecture"
+                                    style="color: var(--text-secondary);"
+                                    set:html={architectureHtml}
+                                />
+                            </div>
+                        )}
+
+                        {project.outcome && (
+                            <div class="modal-section">
+                                <p
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted); margin-bottom: 0.5rem;"
+                                >
+                                    {t.outcome}
+                                </p>
+                                <p
+                                    class="text-sm leading-relaxed"
+                                    style="color: var(--text-secondary);"
+                                >
+                                    {project.outcome}
+                                </p>
+                            </div>
+                        )}
+
+                        {hasMetrics && (
+                            <div class="modal-section">
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
+                                    {Object.entries(project.metrics).map(
+                                        ([key, value], index, array) => (
+                                            <div
+                                                class:list={[
+                                                    'flex flex-col gap-1',
+                                                    {
+                                                        'col-span-2 sm:col-span-1':
+                                                            array.length % 2 !==
+                                                                0 &&
+                                                            index ===
+                                                                array.length -
+                                                                    1,
+                                                    },
+                                                ]}
+                                            >
+                                                <span
+                                                    class="text-2xl font-black"
+                                                    style="color: var(--text-primary);"
+                                                >
+                                                    {String(value)}
+                                                </span>
+                                                <span
+                                                    class="font-mono text-xs tracking-widest"
+                                                    style="color: var(--text-muted);"
+                                                >
+                                                    {key.replace(/_/g, ' ')}
+                                                </span>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <!-- Links en el modal -->
+                        <div
+                            class="modal-section"
+                            style="display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center;"
+                        >
+                            {project.demo_url && (
+                                <a
+                                    href={project.demo_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-secondary);"
+                                >
+                                    demo ↗
+                                </a>
+                            )}
+                            {project.prod_url && (
+                                <a
+                                    href={project.prod_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-secondary);"
+                                >
+                                    prod ↗
+                                </a>
+                            )}
+                            {project.custom_link && (
+                                <a
+                                    href={project.custom_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-secondary);"
+                                >
+                                    {project.custom_link_label || 'link'} ↗
+                                </a>
+                            )}
+                            {project.is_private ? (
+                                <span
+                                    class="font-mono text-xs tracking-widest"
+                                    style="color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 0.125rem 0.5rem;"
+                                >
+                                    🔒 {t.privateRepo}
+                                </span>
+                            ) : (
+                                project.repo_url && (
+                                    <a
+                                        href={project.repo_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="font-mono text-xs tracking-widest"
+                                        style="color: var(--text-secondary);"
+                                    >
+                                        repo ↗
+                                    </a>
+                                )
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+<script define:vars={{ modalId, triggerId, closeId, backdropId }}>
+    const modal = document.getElementById(modalId);
+    const trigger = document.getElementById(triggerId);
+    const closeBtn = document.getElementById(closeId);
+    const backdrop = document.getElementById(backdropId);
+
+    if (!modal || !trigger) return;
+
+    // Mueve el modal al body para escapar el stacking context del ancestor con transform
+    document.body.appendChild(modal);
+
+    function openModal() {
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    trigger.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    backdrop?.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('is-open'))
+            closeModal();
+    });
+</script>
